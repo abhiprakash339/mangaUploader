@@ -16,13 +16,10 @@
 #     app.run(host="0.0.0.0", port=5500)
 
 # -----------------------------------------------------------------------
+import os
 
-
-from flask import Flask, request
+from flask import Flask, request, send_from_directory
 import telegram
-
-# from telebot.credentials import bot_token, bot_user_name, URL
-# from telebot.mastermind import get_response
 
 TOKEN = "1454336471:AAGT-Euyq-39Rbw_4hBAJE6OyPxnuIkQTLM"
 URL = "http://localhost:5500/"
@@ -60,6 +57,12 @@ def set_webhook():
         return "webhook setup ok"
     else:
         return "webhook setup failed"
+
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico',
+                               mimetype='image/vnd.microsoft.icon')
 
 
 @app.route('/')
