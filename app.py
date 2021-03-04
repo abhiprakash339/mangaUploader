@@ -27,6 +27,10 @@ bot = telegram.Bot(token=TOKEN)
 
 app = Flask(__name__)
 
+name = ""
+manga_url = ""
+start = 0
+end = 0
 
 def get_response(text):
     return text + text
@@ -34,6 +38,7 @@ def get_response(text):
 
 @app.route('/{}'.format(TOKEN), methods=['POST'])
 def respond():
+    global name,manga_url,start,end
     # retrieve the message in JSON and then transform it to Telegram object
     update = telegram.Update.de_json(request.get_json(force=True), bot)
 
@@ -41,13 +46,39 @@ def respond():
     msg_id = update.message.message_id
 
     # Telegram understands UTF-8, so encode text for unicode compatibility
-    text = update.message.text.encode('utf-8').decode()
-    print("got text message :", text)
+    userText = update.message.text.encode('utf-8').decode()
+    print("[INFO] got text message :", userText)
 
-    response = get_response(text)
-    bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
+    if userText == "/start":
+        name = ""
+        manga_url = ""
+        start = 0
+        end = 0
+        response = "Enter Manga Name"
+        bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
+        return 'OK'
+    elif name == "":
+        name = userText
+        response = "Enter Manga URL"
+        bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
+        return 'OK'
+    elif manga_url == "":
+        manga_url = userText
+        response = "Enter Starting Chapter Number"
+        bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
+        return 'OK'
+    elif start == 0:
+        start = int(userText)
+        response = "Enter Ending Chapter Number"
+        bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
+        return 'OK'
+    elif end == 0:
+        end = int(userText)
+        response = "[ INPUT ] Name :"+name+" URL :"+manga_url+" START :"+str(start)+" END :"+str(end)
+        bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
+        return 'OK'
 
-    return 'ok'
+
 
 
 @app.route('/setwebhook', methods=['GET', 'POST'])
