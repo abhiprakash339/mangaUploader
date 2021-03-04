@@ -22,7 +22,7 @@ from flask import Flask, request, send_from_directory
 import telegram
 
 TOKEN = "1454336471:AAGT-Euyq-39Rbw_4hBAJE6OyPxnuIkQTLM"
-URL = "http://localhost:5500/"
+URL = "https://manga-uploader.herokuapp.com/"
 bot = telegram.Bot(token=TOKEN)
 
 app = Flask(__name__)
