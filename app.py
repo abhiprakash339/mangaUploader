@@ -54,20 +54,19 @@ def respond():
 def set_webhook():
     s = bot.setWebhook('{URL}{HOOK}'.format(URL=URL, HOOK=TOKEN))
     if s:
-        return "webhook setup ok"
+        return "WEBHOOK SETUP SUCCESSFUL"
     else:
-        return "webhook setup failed"
+        return "WEBHOOK SETUP FAILED"
 
 
 @app.route('/favicon.ico')
 def favicon():
-    return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico',
-                               mimetype='image/vnd.microsoft.icon')
+    return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 
 @app.route('/')
 def index():
-    return '.'
+    return 'WELCOME TO MANGA-UPLOADER'
 
 
 if __name__ == '__main__':
