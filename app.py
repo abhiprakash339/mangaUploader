@@ -141,32 +141,31 @@ def respond():
         response = "Enter Manga Name"
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
         return 'OK'
-    elif data["name"] is None:
+    if data["name"] is None:
         data["name"] = userText
         response = "Enter Manga URL" + str(data)
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
         return 'OK'
-    elif data["manga_url"] is None:
+    if data["manga_url"] is None:
         data["manga_url"] = userText
         response = "Enter Starting Chapter Number" + str(data)
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
         return 'OK'
-    elif data["start"] is None:
+    if data["start"] is None:
         data["start"] = int(userText)
         response = "Enter Ending Chapter Number" + str(data)
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
         return 'OK'
-    elif data["end"] is None:
+    if data["end"] is None:
         data["end"] = int(userText)
         response = "Name : " + str(data["name"]) + "\nURL :" + str(data["manga_url"]) + "\nStart :" + str(
             data["start"]) + "\nEnd :" + str(data["end"])
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
         connect(chat_id)
         return 'OK'
-    else:
-        response = "Restart the Bot by Sending '/start' command"
-        bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
-        return 'OK'
+    response = "Restart the Bot by Sending '/start' command"
+    bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
+    return 'OK'
 
 
 @app.route('/setwebhook', methods=['GET', 'POST'])
