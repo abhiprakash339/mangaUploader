@@ -140,6 +140,14 @@ def respond():
         data["name"] = data["manga_url"] = data["start"] = data["end"] = None
         response = "Enter Manga Name"
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
+        update = telegram.Update.de_json(request.get_json(force=True), bot)
+
+        chat_id = update.message.chat.id
+        msg_id = update.message.message_id
+
+        # Telegram understands UTF-8, so encode text for unicode compatibility
+        userText = update.message.text.encode('utf-8').decode()
+        bot.sendMessage(chat_id=chat_id, text=userText, reply_to_message_id=msg_id)
         return 'OK'
     if data["name"] is None:
         data["name"] = userText
