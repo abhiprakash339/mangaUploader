@@ -137,30 +137,34 @@ def respond():
     print("[INFO] got text message :", userText)
 
     if userText == "/start":
-        data["name"] = data["manga_url"] = data["start"] = data["end"] = None
+        # data["name"] = data["manga_url"] = data["start"] = data["end"] = None
+        config['INPUT']['NAME'] = ""
+        config['INPUT']['MANGA_URL'] = ""
+        config['INPUT']['START'] = ""
+        config['INPUT']['END'] = ""
         response = "Enter Manga Name"
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
         return 'OK'
-    elif data["name"] is None:
-        data["name"] = userText
-        response = "Enter Manga URL" + str(data)
+    elif not config['INPUT']['NAME']:
+        config['INPUT']['NAME'] = userText
+        response = "Enter Manga URL" + str(config['INPUT']['NAME'])
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
         return 'OK'
-    elif data["manga_url"] is None:
-        data["manga_url"] = userText
-        response = "Enter Starting Chapter Number" + str(data)
+    elif not config['INPUT']['MANGA_URL']:
+        config['INPUT']['MANGA_URL'] = userText
+        response = "Enter Starting Chapter Number" + str(config['INPUT']['MANGA_URL'])
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
         return 'OK'
-    elif data["start"] is None:
-        data["start"] = int(userText)
-        response = "Enter Ending Chapter Number" + str(data)
+    elif not config['INPUT']['START']:
+        config['INPUT']['START'] = userText
+        response = "Enter Ending Chapter Number" + str(config['INPUT']['START'])
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
         return 'OK'
-    elif data["end"] is None:
-        data["end"] = int(userText)
-        response = "Name : " + str(data["name"]) + "\nURL :" + str(data["manga_url"]) + "\nStart :" + str(data["start"]) + "\nEnd :" + str(data["end"])
+    elif not config['INPUT']['END']:
+        config['INPUT']['END'] = userText
+        response = "Name : " + str(config['INPUT']['NAME']) + "URL :" + str(config['INPUT']['MANGA_URL']) + "Start :" + str(config['INPUT']['START']) + "End :" + str(config['INPUT']['END'])
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
-        connect(chat_id)
+        # connect(chat_id)
         return 'OK'
     else:
         response = "Restart the Bot by Sending '/start' command"
