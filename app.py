@@ -5,7 +5,18 @@
 # ----------------------------------------------------------- #
 
 import os
+
+import requests
 import telegram
+
+import os
+import shutil
+import time
+import wget
+import requests
+from PIL import Image
+from io import StringIO
+import sys
 
 from configparser import ConfigParser
 from flask import Flask, request, send_from_directory
@@ -15,7 +26,6 @@ config.read('bot.ini')
 
 TOKEN = config['BOT']['TOKEN']
 URL = config['SERVER']['URL']
-
 bot = telegram.Bot(token=TOKEN)
 
 app = Flask(__name__)
@@ -32,11 +42,99 @@ data = {
 }
 
 
-def get_response(text):
-    return text + text
+def link_test(url):
+    status = requests.get(url, stream=True).status_code
+    if status == 200:
+        return True
+    else:
+        return False
 
 
-def get_message():
+def download_chapter(chapter_url):
+    if not os.path.isdir("./bin"):
+        os.mkdir("./bin")
+    else:
+        shutil.rmtree("./bin")
+        os.mkdir("./bin")
+
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:66.0) Gecko/20100101 Firefox/66.0",
+        "Accept-Encoding": "*",
+        "Connection": "keep-alive"
+    }
+
+    page = 1
+    session = requests.Session()
+    while True:
+        temp_url = chapter_url + "-" + str(page).zfill(3) + ".png"
+        img_data = session.get(temp_url, headers=headers, stream=True)
+        if img_data.status_code == 200:
+            image = Image.open(img_data.raw)
+            image.save("./bin/" + str(page).zfill(3) + ".png")
+            sys.stdout.write("\rDownloaded : " + str(page).zfill(3))
+            sys.stdout.flush()
+        else:
+            print("\n")
+            break
+        page += 1
+
+
+def pdf_convert(chapter,chatID):
+    dir = "./bin"
+    file = os.listdir()
+
+    im1 = Image.open(dir + "/001.png", mode='r')
+    im1.load()
+    im1.split()
+    im = list()
+    for i in range(2, len(file) + 1):
+        pic = dir + "/" + str(i) + ".png"
+        try:
+            img = Image.open(pic, mode='r')
+            img.load()
+            img.split()
+        except:
+            continue
+        im.append(img)
+
+    pdf_filename = "./bin/" + data["name"] + " chapter " + str(chapter).zfill(3) + ".pdf"
+    im1.save(pdf_filename, "PDF", resolution=100.0, save_all=True, append_images=im)
+    with open(pdf_filename,'rb') as file:
+        bot.sendDocument(document=file,chat_id=chatID)
+    # time.sleep(2)
+    print(str(chapter)+" Uploaded")
+    shutil.rmtree("bin")
+
+
+def connect(chatID):
+    stop = False
+    main_url = "/".join(data["manga_url"].split("/")[0:-1])
+    start = float(data["start"])
+    end = float(data["end"])
+    temp = float(start)
+    while temp <= end:
+        ch = round(temp, 1)
+        if ch.is_integer():
+            chapter = str(int(ch)).zfill(4)
+            stop = True
+        else:
+            chapter = str(ch).zfill(6)
+            stop = False
+        if link_test(main_url + "/" + chapter + "-001.png"):
+            print(chapter, ": STARTED")
+            download_chapter(main_url + "/" + chapter)
+            pdf_convert(chapter,chatID)
+            print(chapter, ": DONE")
+        elif stop:
+            return
+        else:
+            print(chapter, ": SKIPPED")
+        temp = round(temp, 10) + round(0.1, 10)
+
+
+@app.route('/{}'.format(TOKEN), methods=['POST'])
+def respond():
+    global data
     # retrieve the message in JSON and then transform it to Telegram object
     update = telegram.Update.de_json(request.get_json(force=True), bot)
 
@@ -44,60 +142,36 @@ def get_message():
     msg_id = update.message.message_id
 
     # Telegram understands UTF-8, so encode text for unicode compatibility
-    user_text = update.message.text.encode('utf-8').decode()
-    return user_text, chat_id, msg_id
+    userText = update.message.text.encode('utf-8').decode()
+    print("[INFO] got text message :", userText)
 
-
-def send_message(response, chat_id, msg_id):
-    bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
-
-
-@app.route('/{}'.format(TOKEN), methods=['POST'])
-def respond():
-    global data
-    # # retrieve the message in JSON and then transform it to Telegram object
-    # update = telegram.Update.de_json(request.get_json(force=True), bot)
-    #
-    # chat_id = update.message.chat.id
-    # msg_id = update.message.message_id
-    #
-    # # Telegram understands UTF-8, so encode text for unicode compatibility
-    # userText = update.message.text.encode('utf-8').decode()
-    # print("[INFO] got text message :", userText)
-    user_text, chat_id, msg_id = get_message()
-    if user_text == "/start":
-        data["name"] = data["manga_url"] = data["start"] = data["end"] = None
-        send_message("Enter Manga Name",chat_id,msg_id)
-        user_text,chat_id,msg_id = get_message()
-        send_message(user_text,chat_id,msg_id)
-        return "OK"
-    elif user_text == "/cancel":
+    if userText == "/start":
         data["name"] = data["manga_url"] = data["start"] = data["end"] = None
         response = "Enter Manga Name"
-
-        update = telegram.Update.de_json(request.get_json(force=True), bot)
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
         return 'OK'
-    # elif data["name"] is None:
-    #     data["name"] = userText
-    #     response = "Enter Manga URL" + str(data)
-    #     bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
-    #     return 'OK'
-    # elif data["manga_url"] is None:
-    #     data["manga_url"] = userText
-    #     response = "Enter Starting Chapter Number" + str(data)
-    #     bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
-    #     return 'OK'
-    # elif data["start"] is None:
-    #     data["start"] = int(userText)
-    #     response = "Enter Ending Chapter Number" + str(data)
-    #     bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
-    #     return 'OK'
-    # elif data["end"] is None:
-    #     data["end"] = int(userText)
-    #     response = "[ INPUT ] " + str(data)
-    #     bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
-    #     return 'OK'
+    elif data["name"] is None:
+        data["name"] = userText
+        response = "Enter Manga URL" + str(data)
+        bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
+        return 'OK'
+    elif data["manga_url"] is None:
+        data["manga_url"] = userText
+        response = "Enter Starting Chapter Number" + str(data)
+        bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
+        return 'OK'
+    elif data["start"] is None:
+        data["start"] = int(userText)
+        response = "Enter Ending Chapter Number" + str(data)
+        bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
+        return 'OK'
+    elif data["end"] is None:
+        data["end"] = int(userText)
+        response = "Name : " + str(data["name"]) + "\nURL :" + str(data["manga-url"]) + "\nStart :" + str(
+            data["start"]) + "\nEnd :" + str(data["end"])
+        bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
+        connect(chat_id)
+        return 'OK'
     else:
         response = "Restart the Bot by Sending '/start' command"
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
@@ -125,4 +199,6 @@ def index():
 
 
 if __name__ == '__main__':
-    app.run(threaded=True)
+    app.run(threaded=True, debug=True)
+    # url = "https://fan-trash.lowee.us/manga/One-Piece/1006-001.png"
+    # connect_url(url)
