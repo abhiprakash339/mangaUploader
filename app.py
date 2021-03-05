@@ -140,40 +140,32 @@ def respond():
         data["name"] = data["manga_url"] = data["start"] = data["end"] = None
         response = "Enter Manga Name"
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
-        update = telegram.Update.de_json(request.get_json(force=True), bot)
-
-        chat_id = update.message.chat.id
-        msg_id = update.message.message_id
-
-        # Telegram understands UTF-8, so encode text for unicode compatibility
-        userText = update.message.text.encode('utf-8').decode()
-        bot.sendMessage(chat_id=chat_id, text=userText, reply_to_message_id=msg_id)
         return 'OK'
-    if data["name"] is None:
+    elif data["name"] is None:
         data["name"] = userText
         response = "Enter Manga URL" + str(data)
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
         return 'OK'
-    if data["manga_url"] is None:
+    elif data["manga_url"] is None:
         data["manga_url"] = userText
         response = "Enter Starting Chapter Number" + str(data)
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
         return 'OK'
-    if data["start"] is None:
+    elif data["start"] is None:
         data["start"] = int(userText)
         response = "Enter Ending Chapter Number" + str(data)
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
         return 'OK'
-    if data["end"] is None:
+    elif data["end"] is None:
         data["end"] = int(userText)
-        response = "Name : " + str(data["name"]) + "\nURL :" + str(data["manga_url"]) + "\nStart :" + str(
-            data["start"]) + "\nEnd :" + str(data["end"])
+        response = "Name : " + str(data["name"]) + "\nURL :" + str(data["manga_url"]) + "\nStart :" + str(data["start"]) + "\nEnd :" + str(data["end"])
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
         connect(chat_id)
         return 'OK'
-    response = "Restart the Bot by Sending '/start' command"
-    bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
-    return 'OK'
+    else:
+        response = "Restart the Bot by Sending '/start' command"
+        bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
+        return 'OK'
 
 
 @app.route('/setwebhook', methods=['GET', 'POST'])
