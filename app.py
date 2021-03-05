@@ -74,6 +74,10 @@ def respond():
         response = "[ INPUT ] "+str(data)
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
         return 'OK'
+    else:
+        response = "Restart the Bot by Sending '/start' command"
+        bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
+        return 'OK'
 
 
 @app.route('/setwebhook', methods=['GET', 'POST'])
