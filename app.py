@@ -158,7 +158,7 @@ def respond():
         return 'OK'
     elif data["end"] is None:
         data["end"] = int(userText)
-        response = "Name : " + str(data["name"]) + "\nURL :" + str(data["manga-url"]) + "\nStart :" + str(
+        response = "Name : " + str(data["name"]) + "\nURL :" + str(data["manga_url"]) + "\nStart :" + str(
             data["start"]) + "\nEnd :" + str(data["end"])
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
         connect(chat_id)
