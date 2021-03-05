@@ -36,9 +36,7 @@ def get_response(text):
     return text + text
 
 
-@app.route('/{}'.format(TOKEN), methods=['POST'])
-def respond():
-    global data
+def get_message():
     # retrieve the message in JSON and then transform it to Telegram object
     update = telegram.Update.de_json(request.get_json(force=True), bot)
 
@@ -46,34 +44,60 @@ def respond():
     msg_id = update.message.message_id
 
     # Telegram understands UTF-8, so encode text for unicode compatibility
-    userText = update.message.text.encode('utf-8').decode()
-    print("[INFO] got text message :", userText)
+    user_text = update.message.text.encode('utf-8').decode()
+    return user_text, chat_id, msg_id
 
-    if userText == "/start":
+
+def send_message(response, chat_id, msg_id):
+    bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
+
+
+@app.route('/{}'.format(TOKEN), methods=['POST'])
+def respond():
+    global data
+    # # retrieve the message in JSON and then transform it to Telegram object
+    # update = telegram.Update.de_json(request.get_json(force=True), bot)
+    #
+    # chat_id = update.message.chat.id
+    # msg_id = update.message.message_id
+    #
+    # # Telegram understands UTF-8, so encode text for unicode compatibility
+    # userText = update.message.text.encode('utf-8').decode()
+    # print("[INFO] got text message :", userText)
+    user_text, chat_id, msg_id = get_message()
+    if user_text == "/start":
+        data["name"] = data["manga_url"] = data["start"] = data["end"] = None
+        send_message("Enter Manga Name",chat_id,msg_id)
+        user_text,chat_id,msg_id = get_message()
+        send_message(user_text,chat_id,msg_id)
+        return "OK"
+    elif user_text == "/cancel":
         data["name"] = data["manga_url"] = data["start"] = data["end"] = None
         response = "Enter Manga Name"
+
+        update = telegram.Update.de_json(request.get_json(force=True), bot)
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
         return 'OK'
-    elif data["name"] is None:
-        data["name"] = userText
-        response = "Enter Manga URL"+str(data)
-        bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
-        return 'OK'
-    elif data["manga_url"] is None:
-        data["manga_url"] = userText
-        response = "Enter Starting Chapter Number"+str(data)
-        bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
-        return 'OK'
-    elif data["start"] is None:
-        data["start"] = int(userText)
-        response = "Enter Ending Chapter Number"+str(data)
-        bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
-        return 'OK'
-    elif data["end"] is None:
-        data["end"] = int(userText)
-        response = "[ INPUT ] "+str(data)
-        bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
-        return 'OK'
+    # elif data["name"] is None:
+    #     data["name"] = userText
+    #     response = "Enter Manga URL" + str(data)
+    #     bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
+    #     return 'OK'
+    # elif data["manga_url"] is None:
+    #     data["manga_url"] = userText
+    #     response = "Enter Starting Chapter Number" + str(data)
+    #     bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
+    #     return 'OK'
+    # elif data["start"] is None:
+    #     data["start"] = int(userText)
+    #     response = "Enter Ending Chapter Number" + str(data)
+    #     bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
+    #     return 'OK'
+    # elif data["end"] is None:
+    #     data["end"] = int(userText)
+    #     response = "[ INPUT ] " + str(data)
+    #     bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
+    #     return 'OK'
     else:
         response = "Restart the Bot by Sending '/start' command"
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
