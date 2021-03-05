@@ -12,10 +12,19 @@ k = {
 }
 
 
+def read_input():
+    with open("input.json", "r") as f:
+        data = json.load(f)
+    return data
+
+
+def write_input(data):
+    with open("input.json", "w") as f:
+        f.write(str(json.dumps(data)))
 
 
 data = read_input()
-if not data["NAME"]:
-    data["NAME"] = "Naruto"
+if not data["@Abhi_Prakash123"]["NAME"]:
+    data["@Abhi_Prakash123"]["NAME"] = "Naruto"
     write_input(data)
 print(read_input())

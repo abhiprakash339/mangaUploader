@@ -140,6 +140,7 @@ def respond():
     # retrieve the message in JSON and then transform it to Telegram object
     update = telegram.Update.de_json(request.get_json(force=True), bot)
     user = update.message.from_user.name
+    of = update.update_id + 1
     chat_id = update.message.chat.id
     msg_id = update.message.message_id
 
@@ -149,7 +150,7 @@ def respond():
 
     if userText == "/start":
 
-        response = "Enter Manga Name"+user
+        response = "Name :"+user+"\nUp_ID :"+of+"\nupdates :"+str(update.message.bot.getUpdates(offset=of))
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
         return 'OK'
     elif not config['INPUT']['NAME']:
