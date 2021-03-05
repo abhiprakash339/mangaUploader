@@ -5,19 +5,12 @@
 # ----------------------------------------------------------- #
 
 import os
-
+import sys
+import shutil
 import requests
 import telegram
 
-import os
-import shutil
-import time
-import wget
-import requests
 from PIL import Image
-from io import StringIO
-import sys
-
 from configparser import ConfigParser
 from flask import Flask, request, send_from_directory
 
@@ -30,10 +23,6 @@ bot = telegram.Bot(token=TOKEN)
 
 app = Flask(__name__)
 
-# name = None
-# manga_url = None
-# start = None
-# end = None
 data = {
     "name": None,
     "manga_url": None,
@@ -71,12 +60,14 @@ def download_chapter(chapter_url):
         if img_data.status_code == 200:
             image = Image.open(img_data.raw)
             image.save("./bin/" + str(page).zfill(3) + ".png")
-            sys.stdout.write("\rDownloaded : " + str(page).zfill(3))
+            sys.stdout.write("\r[ INFO ] Downloaded : " + str(page).zfill(3))
             sys.stdout.flush()
         else:
             print("\n")
             break
         page += 1
+
+    return
 
 
 def pdf_convert(chapter,chatID):
@@ -102,7 +93,7 @@ def pdf_convert(chapter,chatID):
     with open(pdf_filename,'rb') as file:
         bot.sendDocument(document=file,chat_id=chatID)
     # time.sleep(2)
-    print(str(chapter)+" Uploaded")
+    print("[ INFO ] "+str(chapter)+" Uploaded")
     shutil.rmtree("bin")
 
 
@@ -121,14 +112,14 @@ def connect(chatID):
             chapter = str(ch).zfill(6)
             stop = False
         if link_test(main_url + "/" + chapter + "-001.png"):
-            print(chapter, ": STARTED")
+            print("[ INFO ] ",chapter, ": STARTED")
             download_chapter(main_url + "/" + chapter)
             pdf_convert(chapter,chatID)
-            print(chapter, ": DONE")
+            print("[ INFO ] ",chapter, ": DONE")
         elif stop:
             return
         else:
-            print(chapter, ": SKIPPED")
+            print("[ INFO ] ",chapter, ": SKIPPED")
         temp = round(temp, 10) + round(0.1, 10)
 
 
