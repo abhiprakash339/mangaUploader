@@ -3,7 +3,7 @@
 #        Telegram Bot to upload manga in pdf format           #
 #                        Flask Program                        #
 # ----------------------------------------------------------- #
-
+import json
 import os
 import sys
 import shutil
@@ -123,11 +123,15 @@ def connect(chatID):
         temp = round(temp, 10) + round(0.1, 10)
 
 
-def get_chat_msg(up_id):
-    up = bot.getUpdates(offset=up_id, timeout=100)
-    items = list(up)
-    items = items.pop()
-    return items['message']['text']
+def read_input():
+    with open("input.json", "r") as f:
+        data = json.load(f)
+    return data
+
+
+def write_input(data):
+    with open("input.json", "w") as f:
+        f.write(str(json.dumps(data)))
 
 
 @app.route('/{}'.format(TOKEN), methods=['POST'])
@@ -135,8 +139,7 @@ def respond():
     global data
     # retrieve the message in JSON and then transform it to Telegram object
     update = telegram.Update.de_json(request.get_json(force=True), bot)
-
-    update_id = update.update_id
+    user = update.callback_query.from_user.name
     chat_id = update.message.chat.id
     msg_id = update.message.message_id
 
@@ -145,16 +148,9 @@ def respond():
     print("[INFO] got text message :", userText)
 
     if userText == "/start":
-        # data["name"] = data["manga_url"] = data["start"] = data["end"] = None
-        config['INPUT']['NAME'] = ""
-        config['INPUT']['MANGA_URL'] = ""
-        config['INPUT']['START'] = ""
-        config['INPUT']['END'] = ""
-        response = "Enter Manga Name"
+        
+        response = "Enter Manga Name"+user
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
-        msg = get_chat_msg(update_id + 1)
-        bot.sendMessage(chat_id=chat_id, text=msg)
-
         return 'OK'
     elif not config['INPUT']['NAME']:
         config['INPUT']['NAME'] = userText

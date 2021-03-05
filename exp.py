@@ -1,13 +1,21 @@
-# import csv
-# with open("input.csv","w") as file:
+import json
+
+#
+# with open("input.csv", "w",newline="") as file:
 #     writer = csv.writer(file)
-#     writer.writerows([['name',''],['manga_url',''],[]])
+#     writer.writerows([['NAME', '0'], ['MANGA_URL', '0'], ['START', '0'], ['END', '0']])
+k = {
+    "NAME": "",
+    "MANGA_URL": "",
+    "START": "",
+    "END": ""
+}
 
-from configparser import ConfigParser
 
-config = ConfigParser()
-config.read('bot.ini')
 
-config['INPUT']['NAME'] = "P"
-if not config['INPUT']['NAME']:
-    print("kk",config['INPUT']['NAME'])
+
+data = read_input()
+if not data["NAME"]:
+    data["NAME"] = "Naruto"
+    write_input(data)
+print(read_input())
