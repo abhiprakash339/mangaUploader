@@ -150,7 +150,7 @@ def respond():
 
     if userText == "/start":
 
-        response = "Name :"+str(user)+"\nUp_ID :"+str(of)+"\nupdates :"+str(update.message.bot.getUpdates(offset=of))
+        response = "Name :"+str(user)+"\nUp_ID :"+str(of)+"\nupdates :"+str(update.message.from_user.bot.getUpdates)
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
         return 'OK'
     elif not config['INPUT']['NAME']:
