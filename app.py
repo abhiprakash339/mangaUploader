@@ -70,7 +70,7 @@ def download_chapter(chapter_url):
     return
 
 
-def pdf_convert(chapter,chatID):
+def pdf_convert(chapter, chatID):
     dir = "./bin"
     file = os.listdir()
 
@@ -90,10 +90,10 @@ def pdf_convert(chapter,chatID):
 
     pdf_filename = "./bin/" + data["name"] + " chapter " + str(chapter).zfill(3) + ".pdf"
     im1.save(pdf_filename, "PDF", resolution=100.0, save_all=True, append_images=im)
-    with open(pdf_filename,'rb') as file:
-        bot.sendDocument(document=file,chat_id=chatID)
+    with open(pdf_filename, 'rb') as file:
+        bot.sendDocument(document=file, chat_id=chatID)
     # time.sleep(2)
-    print("[ INFO ] "+str(chapter)+" Uploaded")
+    print("[ INFO ] " + str(chapter) + " Uploaded")
     shutil.rmtree("bin")
 
 
@@ -112,15 +112,22 @@ def connect(chatID):
             chapter = str(ch).zfill(6)
             stop = False
         if link_test(main_url + "/" + chapter + "-001.png"):
-            print("[ INFO ] ",chapter, ": STARTED")
+            print("[ INFO ] ", chapter, ": STARTED")
             download_chapter(main_url + "/" + chapter)
-            pdf_convert(chapter,chatID)
-            print("[ INFO ] ",chapter, ": DONE")
+            pdf_convert(chapter, chatID)
+            print("[ INFO ] ", chapter, ": DONE")
         elif stop:
             return
         else:
-            print("[ INFO ] ",chapter, ": SKIPPED")
+            print("[ INFO ] ", chapter, ": SKIPPED")
         temp = round(temp, 10) + round(0.1, 10)
+
+
+def get_chat_msg(up_id):
+    up = bot.getUpdates(offset=up_id, timeout=100)
+    items = list(up)
+    items = items.pop()
+    return items['message']['text']
 
 
 @app.route('/{}'.format(TOKEN), methods=['POST'])
@@ -129,6 +136,7 @@ def respond():
     # retrieve the message in JSON and then transform it to Telegram object
     update = telegram.Update.de_json(request.get_json(force=True), bot)
 
+    update_id = update.update_id
     chat_id = update.message.chat.id
     msg_id = update.message.message_id
 
@@ -144,6 +152,9 @@ def respond():
         config['INPUT']['END'] = ""
         response = "Enter Manga Name"
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
+        msg = get_chat_msg(update_id + 1)
+        bot.sendMessage(chat_id=chat_id, text=msg)
+
         return 'OK'
     elif not config['INPUT']['NAME']:
         config['INPUT']['NAME'] = userText
@@ -162,7 +173,9 @@ def respond():
         return 'OK'
     elif not config['INPUT']['END']:
         config['INPUT']['END'] = userText
-        response = "Name : " + str(config['INPUT']['NAME']) + "URL :" + str(config['INPUT']['MANGA_URL']) + "Start :" + str(config['INPUT']['START']) + "End :" + str(config['INPUT']['END'])
+        response = "Name : " + str(config['INPUT']['NAME']) + "URL :" + str(
+            config['INPUT']['MANGA_URL']) + "Start :" + str(config['INPUT']['START']) + "End :" + str(
+            config['INPUT']['END'])
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
         # connect(chat_id)
         return 'OK'
