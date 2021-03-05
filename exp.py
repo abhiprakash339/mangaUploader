@@ -27,4 +27,4 @@ data = read_input()
 if not data["@Abhi_Prakash123"]["NAME"]:
     data["@Abhi_Prakash123"]["NAME"] = "Naruto"
     write_input(data)
-print(read_input())
+print(read_input()["@Abhi_Prakash123"]["NAME"])

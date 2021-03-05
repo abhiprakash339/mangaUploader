@@ -149,32 +149,42 @@ def respond():
     print("[INFO] got text message :", userText)
 
     if userText == "/start":
-
-        response = "Name :"+str(user)+"\nUp_ID :"+str(of)+"\nupdates :"+str(update.message.from_user.bot.getUpdates(offset=of).pop())
+        data = read_input()
+        data[user]["NAME"] = ""
+        data[user]["MANGA_URL"] = ""
+        data[user]["START"] = ""
+        data[user]["END"] = ""
+        write_input(data)
+        response = "/START :"+str(data)
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
         return 'OK'
-    elif not config['INPUT']['NAME']:
-        config['INPUT']['NAME'] = userText
-        response = "Enter Manga URL" + str(config['INPUT']['NAME'])
+    elif not read_input()[user]["NAME"]:
+        data = read_input()
+        data[user]["NAME"] = userText
+        response = "NAME :" + str(data)
+        write_input(data)
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
         return 'OK'
-    elif not config['INPUT']['MANGA_URL']:
-        config['INPUT']['MANGA_URL'] = userText
-        response = "Enter Starting Chapter Number" + str(config['INPUT']['MANGA_URL'])
+    elif not read_input()[user]["MANGA_URL"]:
+        data = read_input()
+        data[user]["MANGA_URL"] = userText
+        response = "MANGA_URL" + str(data)
+        write_input(data)
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
         return 'OK'
-    elif not config['INPUT']['START']:
-        config['INPUT']['START'] = userText
-        response = "Enter Ending Chapter Number" + str(config['INPUT']['START'])
+    elif not read_input()[user]["START"]:
+        data = read_input()
+        data[user]["START"] = userText
+        response = "START :" + str(data)
+        write_input(data)
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
         return 'OK'
-    elif not config['INPUT']['END']:
-        config['INPUT']['END'] = userText
-        response = "Name : " + str(config['INPUT']['NAME']) + "URL :" + str(
-            config['INPUT']['MANGA_URL']) + "Start :" + str(config['INPUT']['START']) + "End :" + str(
-            config['INPUT']['END'])
+    elif not read_input()[user]["END"]:
+        data = read_input()
+        data[user]["END"] = userText
+        response = "END :" + str(data)
+        write_input(data)
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
-        # connect(chat_id)
         return 'OK'
     else:
         response = "Restart the Bot by Sending '/start' command"
