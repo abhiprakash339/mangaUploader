@@ -58,10 +58,10 @@ def download_chapter(chapter_url):
         if img_data.status_code == 200:
             image = Image.open(img_data.raw)
             image.save("./bin/" + str(page).zfill(3) + ".png")
-            sys.stdout.write("\r[ INFO ] Downloaded : " + str(page).zfill(3))
-            sys.stdout.flush()
+            # sys.stdout.write("\r[ INFO ] Downloaded : " + str(page).zfill(3))
+            # sys.stdout.flush()
         else:
-            print("\n")
+            print("[ INFO ] ",chapter_url)
             break
         page += 1
 
@@ -70,14 +70,14 @@ def download_chapter(chapter_url):
 
 def pdf_convert(chapter, chatID):
     dir = "./bin"
-    file = os.listdir()
+    file = os.listdir(dir)
 
     im1 = Image.open(dir + "/001.png", mode='r')
     im1.load()
     im1.split()
     im = list()
     for i in range(2, len(file) + 1):
-        pic = dir + "/" + str(i) + ".png"
+        pic = dir + "/" + str(i).zfill(3) + ".png"
         try:
             img = Image.open(pic, mode='r')
             img.load()
@@ -113,6 +113,7 @@ def connect(chatID):
             stop = False
         if link_test(main_url + "/" + chapter + "-001.png"):
             print("[ INFO ] ", chapter, ": STARTED")
+            print("[ INFO ] chaper URL :", (main_url + "/" + chapter))
             download_chapter(main_url + "/" + chapter)
             pdf_convert(chapter, chatID)
             print("[ INFO ] ", chapter, ": DONE")
