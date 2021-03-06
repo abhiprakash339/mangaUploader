@@ -132,7 +132,7 @@ def connect(chatID):
             pdf_convert(chapter, chatID)
             print("[ INFO ] ", chapter, ": DONE")
         elif stop:
-            bot.sendMessage(chat_id=chatID, text="Completed")
+            bot.sendMessage(chat_id=chatID, text=(chapter + " Not Found"))
             sys.exit()
         else:
             print("[ INFO ] ", chapter, ": SKIPPED")
@@ -255,6 +255,4 @@ def index():
 
 
 if __name__ == '__main__':
-    app.run(threaded=True, debug=True)
-    # url = "https://fan-trash.lowee.us/manga/One-Piece/1006-001.png"
-    # connect_url(url)
+    app.run(threaded=True)
