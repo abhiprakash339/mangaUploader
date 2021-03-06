@@ -23,6 +23,11 @@ bot = telegram.Bot(token=TOKEN)
 
 app = Flask(__name__)
 
+manga_name = ""
+manga_main_url = ""
+manga_start = ""
+manga_end = ""
+
 
 def link_test(url):
     status = requests.get(url, stream=True).status_code
@@ -77,11 +82,11 @@ def pdf_convert(chapter, chatID):
             img = Image.open(pic, mode='r')
             img.load()
             img.split()
+            im.append(img)
         except:
-            continue
-        im.append(img)
+            pass
 
-    pdf_filename = "./bin/" + data["name"] + " chapter " + str(chapter).zfill(3) + ".pdf"
+    pdf_filename = "./bin/" + manga_name + " Chapter " + str(chapter).zfill(3) + ".pdf"
     im1.save(pdf_filename, "PDF", resolution=100.0, save_all=True, append_images=im)
     with open(pdf_filename, 'rb') as file:
         bot.sendDocument(document=file, chat_id=chatID)
@@ -92,10 +97,12 @@ def pdf_convert(chapter, chatID):
 
 def connect(chatID):
     stop = False
-    main_url = "/".join(data["manga_url"].split("/")[0:-1])
-    start = float(data["start"])
-    end = float(data["end"])
+
+    main_url = "/".join(manga_main_url.split("/")[0:-1])
+    start = float(manga_start)
+    end = float(manga_end)
     temp = float(start)
+
     while temp <= end:
         ch = round(temp, 1)
         if ch.is_integer():
@@ -129,11 +136,11 @@ def write_input(data):
 
 @app.route('/{}'.format(TOKEN), methods=['POST'])
 def respond():
-    global data
+    global manga_name, manga_main_url, manga_start, manga_end
     # retrieve the message in JSON and then transform it to Telegram object
     update = telegram.Update.de_json(request.get_json(force=True), bot)
     user = update.message.from_user.name
-    of = update.update_id + 1
+    # of = update.update_id + 1
     chat_id = update.message.chat.id
     msg_id = update.message.message_id
 
@@ -143,27 +150,36 @@ def respond():
 
     if userText == "/start":
         data = read_input()
+
         data[user]["NAME"] = ""
         data[user]["MANGA_URL"] = ""
         data[user]["START"] = ""
         data[user]["END"] = ""
+
         write_input(data)
+
         response = "Enter Manga Name"
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
+
         return 'OK'
     elif not read_input()[user]["NAME"]:
         data = read_input()
         data[user]["NAME"] = userText
-        response = "Enter URL"
+
         write_input(data)
+
+        response = "Enter URL"
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
+
         return 'OK'
     elif not read_input()[user]["MANGA_URL"]:
         data = read_input()
         data[user]["MANGA_URL"] = userText
-        response = "Starting Chapter"
         write_input(data)
+
+        response = "Starting Chapter"
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
+
         return 'OK'
     elif not read_input()[user]["START"]:
         data = read_input()
@@ -175,7 +191,14 @@ def respond():
     elif not read_input()[user]["END"]:
         data = read_input()
         data[user]["END"] = userText
-        response = "Name : " + data[user]["NAME"] + "\nURL :" + data[user]["MANGA_URL"] + "\nSTART :" + data[user]["START"] + "\nEND :" + data[user]["END"] + "\nDownloading chapters ..."
+
+        manga_name = data[user]["NAME"]
+        manga_main_url = data[user]["MANGA_URL"]
+        manga_start = data[user]["START"]
+        manga_end = data[user]["END"]
+
+        response = "Name : " + manga_name + "\nURL :" + manga_main_url + "\nSTART :" + manga_start + "\nEND :" + manga_end + "\nDownloading chapters ..."
+        manga_main_url = data[user]["MANGA_URL"]
         write_input(data)
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
         connect(chat_id)
