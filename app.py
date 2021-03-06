@@ -56,30 +56,34 @@ def download_chapter(chapter_url):
     while True:
         temp_url = chapter_url + "-" + str(page).zfill(3) + ".png"
         print("[ INFO ] ", temp_url)
-        img_data = session.get(temp_url, headers=headers, stream=True)
-        if img_data.status_code == 200:
-            image = Image.open(img_data.raw)
-            image.save("./bin/" + str(page).zfill(3) + ".png")
-            # sys.stdout.write("\r[ INFO ] Downloaded : " + str(page).zfill(3))
-            # sys.stdout.flush()
-        else:
-            print("[ INFO ] ",chapter_url)
-            break
+        try:
+            img_data = session.get(temp_url, headers=headers, stream=True)
+            if img_data.status_code == 200:
+                image = Image.open(img_data.raw)
+                image.save("./bin/" + str(page).zfill(3) + ".png")
+                # sys.stdout.write("\r[ INFO ] Downloaded : " + str(page).zfill(3))
+                # sys.stdout.flush()
+            else:
+                print("[ INFO ] ", chapter_url)
+                break
+        except Exception as excp:
+            print("[ INFO ] ", excp.args)
+
         page += 1
     gc.collect()
     return
 
 
 def pdf_convert(chapter, chatID):
-    dir = "./bin"
-    file = os.listdir(dir)
+    dir_path = "./bin"
+    file = os.listdir(dir_path)
 
-    im1 = Image.open(dir + "/001.png", mode='r')
+    im1 = Image.open(dir_path + "/001.png", mode='r')
     im1.load()
     im1.split()
     im = list()
     for i in range(2, len(file) + 1):
-        pic = dir + "/" + str(i).zfill(3) + ".png"
+        pic = dir_path + "/" + str(i).zfill(3) + ".png"
         try:
             img = Image.open(pic, mode='r')
             img.load()
@@ -91,10 +95,16 @@ def pdf_convert(chapter, chatID):
     pdf_filename = "./bin/" + manga_name + " Chapter " + str(chapter) + ".pdf"
     im1.save(pdf_filename, "PDF", resolution=100.0, save_all=True, append_images=im)
     with open(pdf_filename, 'rb') as file:
-        bot.sendDocument(document=file, chat_id=chatID)
+        print("[ BOT ] ", bot.sendDocument(document=file, chat_id=chatID))
     # time.sleep(2)
     print("[ INFO ] " + str(chapter) + " Uploaded")
-    shutil.rmtree("./bin")
+    print("[ INFO ] ", os.listdir())
+    try:
+        print("[ INFO ] ", os.listdir(dir_path))
+    except:
+        pass
+    shutil.rmtree(dir_path)
+
     gc.collect()
     return
 
