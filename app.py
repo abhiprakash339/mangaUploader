@@ -132,7 +132,7 @@ def connect(chatID):
             pdf_convert(chapter, chatID)
             print("[ INFO ] ", chapter, ": DONE")
         elif stop:
-            bot.sendMessage(chat_id=chatID, text=(chapter + " Not Found"))
+            bot.sendMessage(chat_id=chatID, text=(manga_name + " Chapter " + chapter + " Not Found"))
             sys.exit()
         else:
             print("[ INFO ] ", chapter, ": SKIPPED")
