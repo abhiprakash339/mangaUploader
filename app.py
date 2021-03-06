@@ -5,6 +5,7 @@
 # ----------------------------------------------------------- #
 import json
 import os
+import gc
 import sys
 import shutil
 import requests
@@ -54,6 +55,7 @@ def download_chapter(chapter_url):
     session = requests.Session()
     while True:
         temp_url = chapter_url + "-" + str(page).zfill(3) + ".png"
+        print("[ INFO ] ", temp_url)
         img_data = session.get(temp_url, headers=headers, stream=True)
         if img_data.status_code == 200:
             image = Image.open(img_data.raw)
@@ -64,7 +66,7 @@ def download_chapter(chapter_url):
             print("[ INFO ] ",chapter_url)
             break
         page += 1
-
+    gc.collect()
     return
 
 
@@ -86,13 +88,15 @@ def pdf_convert(chapter, chatID):
         except:
             pass
 
-    pdf_filename = "./bin/" + manga_name + " Chapter " + str(chapter).zfill(3) + ".pdf"
+    pdf_filename = "./bin/" + manga_name + " Chapter " + str(chapter) + ".pdf"
     im1.save(pdf_filename, "PDF", resolution=100.0, save_all=True, append_images=im)
     with open(pdf_filename, 'rb') as file:
         bot.sendDocument(document=file, chat_id=chatID)
     # time.sleep(2)
     print("[ INFO ] " + str(chapter) + " Uploaded")
     shutil.rmtree("./bin")
+    gc.collect()
+    return
 
 
 def connect(chatID):
@@ -122,6 +126,7 @@ def connect(chatID):
         else:
             print("[ INFO ] ", chapter, ": SKIPPED")
         temp = round(temp, 10) + round(0.1, 10)
+        gc.collect()
 
 
 def read_input():
