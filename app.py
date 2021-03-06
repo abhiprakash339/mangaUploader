@@ -23,13 +23,6 @@ bot = telegram.Bot(token=TOKEN)
 
 app = Flask(__name__)
 
-data = {
-    "name": None,
-    "manga_url": None,
-    "start": None,
-    "end": None
-}
-
 
 def link_test(url):
     status = requests.get(url, stream=True).status_code
@@ -94,7 +87,7 @@ def pdf_convert(chapter, chatID):
         bot.sendDocument(document=file, chat_id=chatID)
     # time.sleep(2)
     print("[ INFO ] " + str(chapter) + " Uploaded")
-    shutil.rmtree("bin")
+    shutil.rmtree("./bin")
 
 
 def connect(chatID):
@@ -155,36 +148,37 @@ def respond():
         data[user]["START"] = ""
         data[user]["END"] = ""
         write_input(data)
-        response = "/START :"+str(data)
+        response = "Enter Manga Name"
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
         return 'OK'
     elif not read_input()[user]["NAME"]:
         data = read_input()
         data[user]["NAME"] = userText
-        response = "NAME :" + str(data)
+        response = "Enter URL"
         write_input(data)
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
         return 'OK'
     elif not read_input()[user]["MANGA_URL"]:
         data = read_input()
         data[user]["MANGA_URL"] = userText
-        response = "MANGA_URL" + str(data)
+        response = "Starting Chapter"
         write_input(data)
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
         return 'OK'
     elif not read_input()[user]["START"]:
         data = read_input()
         data[user]["START"] = userText
-        response = "START :" + str(data)
+        response = "Ending Chapter"
         write_input(data)
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
         return 'OK'
     elif not read_input()[user]["END"]:
         data = read_input()
         data[user]["END"] = userText
-        response = "END :" + str(data)
+        response = "Name : " + data[user]["NAME"] + "\nURL :" + data[user]["MANGA_URL"] + "\nSTART :" + data[user]["START"] + "\nEND :" + data[user]["END"] + "\nDownloading chapters ..."
         write_input(data)
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
+        connect(chat_id)
         return 'OK'
     else:
         response = "Restart the Bot by Sending '/start' command"
