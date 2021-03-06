@@ -222,6 +222,7 @@ def respond():
         manga_main_url = data[user]["MANGA_URL"]
         write_input(data)
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id, disable_web_page_preview=True)
+        stop_connect = False
         thd = threading.Thread(target=connect, args=(chat_id,))
         thd.start()
         # connect(chat_id)
