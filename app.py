@@ -10,6 +10,7 @@ import sys
 import shutil
 import requests
 import telegram
+import threading
 
 from PIL import Image
 from configparser import ConfigParser
@@ -217,11 +218,13 @@ def respond():
         manga_main_url = data[user]["MANGA_URL"]
         write_input(data)
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
-        connect(chat_id)
+        thd = threading.Thread(target=connect,args=(chat_id,))
+        thd.start()
+        # connect(chat_id)
         return 'OK'
     else:
         response = "Restart the Bot by Sending '/start' command"
-        bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
+        bot.sendMessage(chat_id=chat_id, text=response)
         return 'OK'
 
 
