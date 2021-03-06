@@ -133,11 +133,12 @@ def connect(chatID):
             print("[ INFO ] ", chapter, ": DONE")
         elif stop:
             bot.sendMessage(chat_id=chatID, text="Completed")
-            return
+            sys.exit()
         else:
             print("[ INFO ] ", chapter, ": SKIPPED")
         temp = round(temp, 10) + round(0.1, 10)
         gc.collect()
+    bot.sendMessage(chat_id=chatID, text="Completed")
     sys.exit()
 
 
