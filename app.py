@@ -65,7 +65,7 @@ def download_chapter(chapter_url,chat_id):
             if img_data.status_code == 200:
                 image = Image.open(img_data.raw)
                 image.save("./bin/" + str(page).zfill(3) + ".png")
-                bot.edit_message_text(chat_id=chat_id,text="PAGE "+str(page).zfill(3),message_id=msg.message_id)
+                bot.edit_message_text(chat_id=chat_id,text="\nDownloading PAGE :"+str(page).zfill(3),message_id=msg.message_id)
                 # sys.stdout.write("\r[ INFO ] Downloaded : " + str(page).zfill(3))
                 # sys.stdout.flush()
             else:
