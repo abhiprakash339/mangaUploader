@@ -127,19 +127,18 @@ def connect(chatID):
             stop = False
         if link_test(main_url + "/" + chapter + "-001.png"):
             print("[ INFO ] ", chapter, ": STARTED")
-            print("[ INFO ] chaper URL :", (main_url + "/" + chapter))
             download_chapter(main_url + "/" + chapter)
             pdf_convert(chapter, chatID)
             print("[ INFO ] ", chapter, ": DONE")
         elif stop:
             bot.sendMessage(chat_id=chatID, text=(manga_name + " Chapter " + chapter + " Not Found"))
-            sys.exit()
+            return
         else:
             print("[ INFO ] ", chapter, ": SKIPPED")
         temp = round(temp, 10) + round(0.1, 10)
         gc.collect()
     bot.sendMessage(chat_id=chatID, text="Completed")
-    sys.exit()
+    return
 
 
 def read_input():
@@ -180,9 +179,31 @@ def respond():
         write_input(data)
 
         response = "Enter Manga Name"
-        bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
+        print("[ BOT ]",bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id))
 
         return 'OK'
+    elif "/add" in userText:
+        k = userText.split()[1]
+        d = dict(json.loads(k))
+        print("[ INFO ] ", d)
+        with open("manga_data.json", "r") as read_json:
+            m = dict(json.load(read_json))
+            key = list(d.keys())[0]
+            m[key] = d[key]
+        print(json.dumps(m))
+        with open("manga_data.json", "w") as write_json:
+            write_json.write(json.dumps(m))
+    elif "/ongoing" in userText:
+        with open("manga_data.json", "r") as read_json:
+            m = dict(json.load(read_json))
+            temp = ""
+            for i in m:
+                temp += i + " : " + m[i] + "\n"
+            bot.sendMessage(chat_id=chat_id, text=temp, reply_to_message_id=msg_id)
+
+    elif "/select" in userText:
+        k = userText.split()[1]
+
     elif not read_input()[user]["NAME"]:
         data = read_input()
         data[user]["NAME"] = userText
@@ -208,7 +229,6 @@ def respond():
         response = "Ending Chapter"
         write_input(data)
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
-
         return 'OK'
     elif not read_input()[user]["END"]:
         data = read_input()
@@ -224,9 +244,8 @@ def respond():
         write_input(data)
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id, disable_web_page_preview=True)
         stop_connect = False
-        thd = threading.Thread(target=connect, args=(chat_id,))
+        thd = threading.Thread(name="connect_thread", target=connect, args=(chat_id,))
         thd.start()
-        # connect(chat_id)
         return 'OK'
     else:
         response = "Restart the Bot by Sending '/start' command"
