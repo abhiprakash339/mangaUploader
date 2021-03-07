@@ -193,6 +193,7 @@ def respond():
         print(json.dumps(m))
         with open("manga_data.json", "w") as write_json:
             write_json.write(json.dumps(m))
+        return "OK"
     elif "/ongoing" in userText:
         with open("manga_data.json", "r") as read_json:
             m = dict(json.load(read_json))
@@ -200,6 +201,7 @@ def respond():
             for i in m:
                 temp += i + " : " + m[i] + "\n"
             bot.sendMessage(chat_id=chat_id, text=temp, reply_to_message_id=msg_id)
+        return "OK"
 
     elif "/select" in userText:
         k = userText.split()[1]
