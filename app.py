@@ -81,6 +81,8 @@ def download_chapter(chapter_url,chat_id):
 
 
 def pdf_convert(chapter, chatID):
+    if int(chapter[0]) == 0:
+        chapter = chapter[1:]
     dir_path = "./bin"
     file = os.listdir(dir_path)
 
