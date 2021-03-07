@@ -52,22 +52,22 @@ def download_chapter(chapter_url):
             img_data = session.get(temp_url, headers=headers, stream=True)
             if img_data.status_code == 200:
 
-                page_file = bin_path +str(page).zfill(3)+".png"
+                # page_file = bin_path +str(page).zfill(3)+".png"
                 image = Image.open(img_data.raw)
-                image.save(page_file)
+                # image.save(page_file)
                 if page == 1:
-                    im1 = Image.open(page_file, mode='r')
+                    im1 = image
                     im1.load()
                     im1.split()
-                    os.remove(page_file)
+                    # os.remove(page_file)
                 else:
                     pic = bin_path + str(page).zfill(3) + ".png"
                     try:
-                        img = Image.open(pic, mode='r')
+                        img = image
                         img.load()
                         img.split()
                         im.append(img)
-                        os.remove(page_file)
+                        # os.remove(page_file)
                     except:
                         pass
 
@@ -81,7 +81,7 @@ def download_chapter(chapter_url):
         if page >= 10:
             break
         page += 1
-    pdf_filename = page_file + "Banana Fish" + " Chapter " + str("001") + ".pdf"
+    pdf_filename = bin_path + "Banana Fish" + " Chapter " + str("001") + ".pdf"
     im1.save(pdf_filename, "PDF", resolution=100.0, save_all=True, append_images=im)
     return
 
