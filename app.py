@@ -13,6 +13,7 @@ import telegram
 import threading
 
 from PIL import Image
+from PyPDF2 import PdfFileMerger
 from configparser import ConfigParser
 from flask import Flask, request, send_from_directory
 
@@ -41,7 +42,7 @@ def link_test(url):
         return False
 
 
-def download_chapter(chapter_url, chat_id):
+def download_chapter(chapter_url, chat_id,ch):
     global manga_name
     bin_path = "./bin/"
     if not os.path.isdir(bin_path):
@@ -60,8 +61,12 @@ def download_chapter(chapter_url, chat_id):
     session = requests.Session()
     msg = bot.sendMessage(chat_id=chat_id, text="\nDownloading PAGE :000")
     im = list()
+    pdf_filename = str(bin_path + manga_name + " Chapter " + str(ch) + ".pdf")
+    temp2 = "./bin/temp2.pdf"
+    temp3 = "./bin/temp3.pdf"
     while True:
-        temp_url = chapter_url + "-" + str(page).zfill(3) + ".png"
+        merger = PdfFileMerger()
+        temp_url = str(chapter_url + "-" + str(page).zfill(3) + ".png")
         print("[ INFO ] ", temp_url)
         img_path = bin_path + str(page).zfill(3) + ".png"
         try:
@@ -69,20 +74,19 @@ def download_chapter(chapter_url, chat_id):
             if img_data.status_code == 200:
                 bot.edit_message_text(chat_id=chat_id, text="\nDownloading PAGE :" + str(page).zfill(3), message_id=msg.message_id)
                 image = Image.open(img_data.raw)
-                # image.save(img_path)
+                image.load()
+                image.split()
                 if page == 1:
-                    # im1 = Image.open(img_path, mode='r')
-                    im1 = image
-                    im1.load()
-                    im1.split()
-                    # os.remove(img_path)
+                    image.save(pdf_filename, "PDF", resolution=100.0, save_all=True)
                 else:
-                    # img = Image.open(img_path, mode='r')
-                    img = image
-                    img.load()
-                    img.split()
-                    im.append(img)
-                    # os.remove(img_path)
+                    image.save(temp2, "PDF", resolution=100.0, save_all=True)
+                    merger.append(pdf_filename)
+                    merger.append(temp2)
+                    merger.write(temp3)
+                    merger.close()
+                    os.remove(pdf_filename)
+                    os.rename(temp3, pdf_filename)
+                    os.remove(temp2)
             else:
                 break
         except Exception as excp:
@@ -93,9 +97,9 @@ def download_chapter(chapter_url, chat_id):
         page += 1
         gc.collect()
 
-    pdf_filename = bin_path + manga_name + " Chapter " + str("001") + ".pdf"
-    bot.edit_message_text(chat_id=chat_id, text="Making Pdf...", message_id=msg.message_id)
-    im1.save(pdf_filename, "PDF", resolution=100.0, save_all=True, append_images=im)
+
+    # bot.edit_message_text(chat_id=chat_id, text="Making Pdf...", message_id=msg.message_id)
+    # im1.save(pdf_filename, "PDF", resolution=100.0, save_all=True, append_images=im)
 
     with open(pdf_filename, 'rb') as file:
         bot.edit_message_text(chat_id=chat_id, text="Uploading PDF...", message_id=msg.message_id)
@@ -164,7 +168,7 @@ def connect(chatID):
             stop = False
         if link_test(main_url + "/" + chapter + "-001.png"):
             print("[ INFO ] ", chapter, ": STARTED")
-            download_chapter(main_url + "/" + chapter, chatID)
+            download_chapter(str(main_url + "/" + chapter), chatID,chapter)
             # pdf_convert(chapter, chatID)
             print("[ INFO ] ", chapter, ": COMPLETED")
         elif stop:
