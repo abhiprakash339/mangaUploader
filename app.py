@@ -67,8 +67,7 @@ def download_chapter(chapter_url, chat_id):
         try:
             img_data = session.get(temp_url, headers=headers, stream=True)
             if img_data.status_code == 200:
-                bot.edit_message_text(chat_id=chat_id, text="\nDownloading PAGE :" + str(page).zfill(3),
-                                      message_id=msg.message_id)
+                bot.edit_message_text(chat_id=chat_id, text="\nDownloading PAGE :" + str(page).zfill(3), message_id=msg.message_id)
                 image = Image.open(img_data.raw)
                 image.save(img_data)
                 if page == 1:
@@ -85,9 +84,9 @@ def download_chapter(chapter_url, chat_id):
             else:
                 break
         except Exception as excp:
-            print("[ INFO ] ", excp.args)
+            print("[ INFO ] ", excp)
             bot.delete_message(chat_id=chat_id, message_id=msg.message_id)
-            bot.sendMessage(chat_id=chat_id, text="[ ERROR ] :" + str(excp.args))
+            bot.sendMessage(chat_id=chat_id, text="[ ERROR ] :" + str(excp))
             return
         page += 1
     pdf_filename = bin_path + manga_name + " Chapter " + str("001") + ".pdf"
