@@ -41,7 +41,7 @@ def link_test(url):
         return False
 
 
-def download_chapter(chapter_url):
+def download_chapter(chapter_url,chat_id):
     if not os.path.isdir("./bin"):
         os.mkdir("./bin")
     else:
@@ -56,6 +56,7 @@ def download_chapter(chapter_url):
 
     page = 1
     session = requests.Session()
+    msg = bot.sendMessage(chat_id=chat_id, text="PAGE 001")
     while True:
         temp_url = chapter_url + "-" + str(page).zfill(3) + ".png"
         print("[ INFO ] ", temp_url)
@@ -64,6 +65,7 @@ def download_chapter(chapter_url):
             if img_data.status_code == 200:
                 image = Image.open(img_data.raw)
                 image.save("./bin/" + str(page).zfill(3) + ".png")
+                bot.edit_message_text(chat_id=chat_id,text="PAGE "+str(page).zfill(3),message_id=msg.message_id)
                 # sys.stdout.write("\r[ INFO ] Downloaded : " + str(page).zfill(3))
                 # sys.stdout.flush()
             else:
@@ -73,6 +75,7 @@ def download_chapter(chapter_url):
             print("[ INFO ] ", excp.args)
 
         page += 1
+    bot.delete_message(chat_id= chat_id,message_id=msg.message_id)
     gc.collect()
     return
 
@@ -127,14 +130,14 @@ def connect(chatID):
             stop = False
         if link_test(main_url + "/" + chapter + "-001.png"):
             print("[ INFO ] ", chapter, ": STARTED")
-            download_chapter(main_url + "/" + chapter)
+            download_chapter(main_url + "/" + chapter,chatID)
             pdf_convert(chapter, chatID)
-            print("[ INFO ] ", chapter, ": DONE")
+            print("[ INFO ] ", chapter, ": COMPLETED")
         elif stop:
             bot.sendMessage(chat_id=chatID, text=(manga_name + " Chapter " + chapter + " Not Found"))
             return
         else:
-            print("[ INFO ] ", chapter, ": SKIPPED")
+            print("[ INFO ] ", chapter, ": NOT-AVAILABLE")
         temp = round(temp, 10) + round(0.1, 10)
         gc.collect()
     bot.sendMessage(chat_id=chatID, text="Completed")
