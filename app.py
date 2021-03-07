@@ -69,7 +69,7 @@ def download_chapter(chapter_url, chat_id):
             if img_data.status_code == 200:
                 bot.edit_message_text(chat_id=chat_id, text="\nDownloading PAGE :" + str(page).zfill(3), message_id=msg.message_id)
                 image = Image.open(img_data.raw)
-                image.save(img_data)
+                image.save(img_path)
                 if page == 1:
                     im1 = Image.open(img_path, mode='r')
                     im1.load()
