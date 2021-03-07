@@ -58,7 +58,7 @@ def download_chapter(chapter_url, chat_id):
 
     page = 1
     session = requests.Session()
-    msg = bot.sendMessage(chat_id=chat_id, text="\nDownloading PAGE :001")
+    msg = bot.sendMessage(chat_id=chat_id, text="\nDownloading PAGE :000")
     im = list()
     while True:
         temp_url = chapter_url + "-" + str(page).zfill(3) + ".png"
