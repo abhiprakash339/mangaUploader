@@ -89,17 +89,21 @@ def download_chapter(chapter_url, chat_id):
             bot.sendMessage(chat_id=chat_id, text="[ ERROR ] :" + str(excp))
             return
         page += 1
+        gc.collect()
+
     pdf_filename = bin_path + manga_name + " Chapter " + str("001") + ".pdf"
     bot.edit_message_text(chat_id=chat_id, text="Making Pdf...", message_id=msg.message_id)
     im1.save(pdf_filename, "PDF", resolution=100.0, save_all=True, append_images=im)
+
     with open(pdf_filename, 'rb') as file:
         bot.edit_message_text(chat_id=chat_id, text="Uploading PDF...", message_id=msg.message_id)
         print("[ BOT ] ", bot.sendDocument(document=file, chat_id=chat_id))
         bot.edit_message_text(chat_id=chat_id, text="Uploading PDF Completed", message_id=msg.message_id)
+
     print("[ INFO ] ", pdf_filename, " Uploaded")
     bot.delete_message(chat_id=chat_id, message_id=msg.message_id)
-    gc.collect()
     shutil.rmtree(bin_path)
+    gc.collect()
     return
 
 
@@ -169,6 +173,7 @@ def connect(chatID):
         temp = round(temp, 10) + round(0.1, 10)
         gc.collect()
     bot.sendMessage(chat_id=chatID, text="Completed")
+    gc.collect()
     return
 
 
@@ -211,7 +216,7 @@ def respond():
 
         response = "Enter Manga Name"
         print("[ BOT ]", bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id))
-
+        gc.collect()
         return 'OK'
     elif "/add" in userText:
         k = userText[5:]
@@ -225,6 +230,7 @@ def respond():
         with open("manga_data.json", "w") as write_json:
             write_json.write(json.dumps(m))
         bot.sendMessage(chat_id=chat_id, text="Added", reply_to_message_id=msg_id, disable_web_page_preview=True)
+        gc.collect()
         return "OK"
     elif "/ongoing" in userText:
         with open("manga_data.json", "r") as read_json:
@@ -233,6 +239,7 @@ def respond():
             for i in m:
                 temp += i + " : " + m[i] + "\n"
             bot.sendMessage(chat_id=chat_id, text=temp, reply_to_message_id=msg_id, disable_web_page_preview=True)
+        gc.collect()
         return "OK"
 
     elif "/select" in userText:
@@ -247,6 +254,7 @@ def respond():
 
         response = "Enter URL"
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
+        gc.collect()
 
         return 'OK'
     elif not read_input()[user]["MANGA_URL"]:
@@ -256,6 +264,7 @@ def respond():
 
         response = "Starting Chapter"
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
+        gc.collect()
 
         return 'OK'
     elif not read_input()[user]["START"]:
@@ -279,8 +288,10 @@ def respond():
         write_input(data)
         bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id, disable_web_page_preview=True)
         stop_connect = False
+
         thd = threading.Thread(name="connect_thread", target=connect, args=(chat_id,))
         thd.start()
+        gc.collect()
         return 'OK'
     else:
         response = "Restart the Bot by Sending '/start' command"
