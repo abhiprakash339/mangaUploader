@@ -193,6 +193,7 @@ def respond():
         print(json.dumps(m))
         with open("manga_data.json", "w") as write_json:
             write_json.write(json.dumps(m))
+        bot.sendMessage(chat_id=chat_id, text="Added", reply_to_message_id=msg_id, disable_web_page_preview=True)
         return "OK"
     elif "/ongoing" in userText:
         with open("manga_data.json", "r") as read_json:
