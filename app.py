@@ -184,6 +184,7 @@ def respond():
         return 'OK'
     elif "/add" in userText:
         k = userText.split()[1]
+        print(k)
         d = dict(json.loads(k))
         print("[ INFO ] ", d)
         with open("manga_data.json", "r") as read_json:
