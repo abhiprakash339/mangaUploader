@@ -200,11 +200,12 @@ def respond():
             temp = ""
             for i in m:
                 temp += i + " : " + m[i] + "\n"
-            bot.sendMessage(chat_id=chat_id, text=temp, reply_to_message_id=msg_id)
+            bot.sendMessage(chat_id=chat_id, text=temp, reply_to_message_id=msg_id,disable_web_page_preview=True)
         return "OK"
 
     elif "/select" in userText:
         k = userText.split()[1]
+        return "OK"
 
     elif not read_input()[user]["NAME"]:
         data = read_input()
