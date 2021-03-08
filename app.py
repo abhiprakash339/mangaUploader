@@ -42,7 +42,7 @@ def link_test(url):
         return False
 
 
-def download_chapter(chapter_url, chat_id,ch):
+def download_chapter(chapter_url, chat_id, ch):
     global manga_name
     bin_path = "./bin/"
     if not os.path.isdir(bin_path):
@@ -50,7 +50,8 @@ def download_chapter(chapter_url, chat_id,ch):
     else:
         shutil.rmtree(bin_path)
         os.mkdir(bin_path)
-
+    if int(ch[0]) == 0:
+        ch = ch[1:]
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:66.0) Gecko/20100101 Firefox/66.0",
         "Accept-Encoding": "*",
@@ -60,7 +61,6 @@ def download_chapter(chapter_url, chat_id,ch):
     page = 1
     session = requests.Session()
     msg = bot.sendMessage(chat_id=chat_id, text="\nDownloading PAGE :000")
-    im = list()
     pdf_filename = str(bin_path + manga_name + " Chapter " + str(ch) + ".pdf")
     temp2 = "./bin/temp2.pdf"
     temp3 = "./bin/temp3.pdf"
@@ -68,11 +68,11 @@ def download_chapter(chapter_url, chat_id,ch):
         merger = PdfFileMerger()
         temp_url = str(chapter_url + "-" + str(page).zfill(3) + ".png")
         print("[ INFO ] ", temp_url)
-        img_path = bin_path + str(page).zfill(3) + ".png"
         try:
             img_data = session.get(temp_url, headers=headers, stream=True)
             if img_data.status_code == 200:
-                bot.edit_message_text(chat_id=chat_id, text="\nDownloading PAGE :" + str(page).zfill(3), message_id=msg.message_id)
+                bot.edit_message_text(chat_id=chat_id, text="\nDownloading PAGE :" + str(page).zfill(3),
+                                      message_id=msg.message_id)
                 image = Image.open(img_data.raw)
                 image.load()
                 image.split()
@@ -97,10 +97,6 @@ def download_chapter(chapter_url, chat_id,ch):
         page += 1
         gc.collect()
 
-
-    # bot.edit_message_text(chat_id=chat_id, text="Making Pdf...", message_id=msg.message_id)
-    # im1.save(pdf_filename, "PDF", resolution=100.0, save_all=True, append_images=im)
-
     with open(pdf_filename, 'rb') as file:
         bot.edit_message_text(chat_id=chat_id, text="Uploading PDF...", message_id=msg.message_id)
         print("[ BOT ] ", bot.sendDocument(document=file, chat_id=chat_id))
@@ -109,41 +105,6 @@ def download_chapter(chapter_url, chat_id,ch):
     print("[ INFO ] ", pdf_filename, " Uploaded")
     bot.delete_message(chat_id=chat_id, message_id=msg.message_id)
     shutil.rmtree(bin_path)
-    gc.collect()
-    return
-
-
-def pdf_convert(chapter, chatID):
-    if int(chapter[0]) == 0:
-        chapter = chapter[1:]
-    dir_path = "./bin/"
-    file = os.listdir(dir_path)
-    # with open("dummy.pdf", 'rb') as dummy:
-    #     dummy = bot.sendDocument(document=dummy, chat_id=chatID)
-    # fileID = dummy.document.file_id
-    im1 = Image.open(dir_path + "/001.png", mode='r')
-    im1.load()
-    im1.split()
-    im = list()
-    for i in range(2, len(file) + 1):
-        pic = dir_path + "/" + str(i).zfill(3) + ".png"
-        try:
-            img = Image.open(pic, mode='r')
-            img.load()
-            img.split()
-            im.append(img)
-        except:
-            pass
-
-    pdf_filename = "./bin/" + manga_name + " Chapter " + str(chapter) + ".pdf"
-    im1.save(pdf_filename, "PDF", resolution=100.0, save_all=True, append_images=im)
-    with open(pdf_filename, 'rb') as file:
-
-        print("[ BOT ] ", bot.sendDocument(document=file, chat_id=chatID))
-    print("[ INFO ] ", pdf_filename, " Uploaded")
-    shutil.rmtree(dir_path)
-    print("[ INFO ] ", os.listdir())
-
     gc.collect()
     return
 
@@ -168,8 +129,7 @@ def connect(chatID):
             stop = False
         if link_test(main_url + "/" + chapter + "-001.png"):
             print("[ INFO ] ", chapter, ": STARTED")
-            download_chapter(str(main_url + "/" + chapter), chatID,chapter)
-            # pdf_convert(chapter, chatID)
+            download_chapter(str(main_url + "/" + chapter), chatID, chapter)
             print("[ INFO ] ", chapter, ": COMPLETED")
         elif stop:
             bot.sendMessage(chat_id=chatID, text=(manga_name + " Chapter " + chapter + " Not Found"))
@@ -209,10 +169,12 @@ def respond():
     print("[INFO] got text message :", userText)
 
     if userText == "/start":
-        stop_connect = True
 
         data = read_input()
-
+        if dict(data).get(user, None) is None:
+            bot.sendMessage(chat_id=chat_id, text="You Are Not Allowed", reply_to_message_id=msg_id)
+            return "OK"
+        stop_connect = True
         data[user]["NAME"] = ""
         data[user]["MANGA_URL"] = ""
         data[user]["START"] = ""
