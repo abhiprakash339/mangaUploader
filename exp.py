@@ -1,11 +1,24 @@
-import json
+from flask import Flask
+import logging
+
+logging.basicConfig(
+    filename="bot.log",
+    filemode="w",
+    format="%(asctime)s : %(name)s : %(levelname)s : %(message)s"
+)
+
+logging.getLogger("exp").setLevel(logging.DEBUG)
+
+LOGGER = logging.getLogger(__name__)
+LOGGER.setLevel(logging.CRITICAL)
+app = Flask(__name__)
 
 
-def read_input():
-    with open("input.json", "r") as f:
-        data = json.load(f)
-    return data
 
-s=read_input()
-s = dict(s)
-print(s.get("@Abhi_Prakash123"))
+@app.route("/api")
+def home():
+    LOGGER.debug("debug")
+    LOGGER.info("/api is called")
+    return {"/status":"gives status"}
+if __name__ == "__main__":
+    app.run(host='https://api.telegram.org/')
