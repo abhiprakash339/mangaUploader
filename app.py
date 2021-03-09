@@ -145,6 +145,7 @@ def connect(name, manga_url, start, end, chatID):
 
 
 def get_bot_inputs(chat_id, msg, update_id):
+    bot.deleteWebhook()
     bot.sendMessage(chat_id=chat_id, text=msg)
     input_update = bot.getUpdates(offset=update_id, timeout=200)
     if not input_update:
@@ -154,6 +155,7 @@ def get_bot_inputs(chat_id, msg, update_id):
     input_message = input_update.pop().message
     input_txt = input_message.text
     input_id = input_message.message_id
+    bot.setWebhook('{URL}{HOOK}'.format(URL=URL, HOOK=TOKEN))
     return input_txt, input_id
 
 
@@ -172,7 +174,6 @@ def respond():
     print("[INFO] got text message :", userText)
 
     if userText == "/start":
-        bot.deleteWebhook()
         # if dict(data).get(user, None) is None:
         #     bot.sendMessage(chat_id=chat_id, text="You Are Not Allowed", reply_to_message_id=msg_id)
         #     return "OK"
