@@ -16,7 +16,6 @@ from PIL import Image
 from PyPDF2 import PdfFileMerger
 from configparser import ConfigParser
 from flask import Flask, request, send_from_directory
-from flask_restful import Api, Resource
 
 config = ConfigParser()
 config.read('bot.ini')
@@ -171,47 +170,25 @@ def respond():
     print("[INFO] got text message :", userText)
 
     if userText == "/start":
+        data = read_input()
+        if dict(data).get(user, None) is None:
+            bot.sendMessage(chat_id=chat_id, text="You Are Not Allowed", reply_to_message_id=msg_id)
+            return "OK"
+        bot.sendMessage(chat_id=chat_id,text="Enter Manga Name")
         bot.deleteWebhook()
-        # if dict(data).get(user, None) is None:
-        #     bot.sendMessage(chat_id=chat_id, text="You Are Not Allowed", reply_to_message_id=msg_id)
-        #     return "OK"
-        # ------------------ <name> --------------------- #
-        bot.sendMessage(chat_id=chat_id, text="Enter Manga Name")
         name_update = bot.getUpdates(offset=update_id, timeout=200)
-        name_message = name_update.pop().message
-        name = name_message.text
-        name_id = name_message.message_id
-        # ------------------ </name> -------------------- #
-        update_id += 1
-        # ------------------ <manga-url> --------------------- #
-        bot.sendMessage(chat_id=chat_id, text="Enter Manga URL")
-        manga_url_update = bot.getUpdates(offset=update_id, timeout=200)
-        manga_url_message = manga_url_update.pop().message
-        manga_url = manga_url_message.text
-        manga_url_id = manga_url_message.message_id
-        # ------------------ </mang-url> -------------------- #
-        update_id += 1
-        # ------------------ <start> --------------------- #
-        bot.sendMessage(chat_id=chat_id, text="Enter Starting Chapter")
-        start_update = bot.getUpdates(offset=update_id, timeout=200)
-        start_message = start_update.pop().message
-        start = start_message.text
-        start_id = start_message.message_id
-        # ------------------ </start> -------------------- #
-        update_id += 1
-        # ------------------ <end> --------------------- #
-        bot.sendMessage(chat_id=chat_id, text="Enter Starting Chapter")
-        end_update = bot.getUpdates(offset=update_id, timeout=200)
-        end_message = end_update.pop().message
-        end = end_message.text
-        end_id = end_message.message_id
-        print("[ BOT ] ",name," : ",manga_url," : ",start," : ",end)
-        # ------------------ </end> -------------------- #
 
-        # response = "Enter Manga Name"
-        # print("[ BOT ] ", bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id))
-        # gc.collect()
-        bot.setWebhook('{URL}{HOOK}'.format(URL=URL, HOOK=TOKEN))
+        stop_connect = True
+        data[user]["NAME"] = ""
+        data[user]["MANGA_URL"] = ""
+        data[user]["START"] = ""
+        data[user]["END"] = ""
+
+        write_input(data)
+
+        response = "Enter Manga Name"
+        print("[ BOT ] ", bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id))
+        gc.collect()
         return 'OK'
     elif "/add" in userText:
         k = userText[5:]
@@ -311,6 +288,7 @@ def favicon():
 
 @app.route("/test")
 def test():
+
     bot.deleteWebhook()
 
     up = bot.getUpdates(offset=None, timeout=200)
