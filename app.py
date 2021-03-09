@@ -145,17 +145,14 @@ def connect(name, manga_url, start, end, chatID):
 
 
 def get_bot_inputs(chat_id, msg, update_id):
-    bot.deleteWebhook()
     bot.sendMessage(chat_id=chat_id, text=msg)
     input_update = bot.getUpdates(offset=update_id, timeout=200)
     if not input_update:
         bot.sendMessage(text="timeout Send '/start' agian")
-        bot.setWebhook('{URL}{HOOK}'.format(URL=URL, HOOK=TOKEN))
         return None, None
     input_message = input_update.pop().message
     input_txt = input_message.text
     input_id = input_message.message_id
-    bot.setWebhook('{URL}{HOOK}'.format(URL=URL, HOOK=TOKEN))
     return input_txt, input_id
 
 
@@ -174,24 +171,41 @@ def respond():
     print("[INFO] got text message :", userText)
 
     if userText == "/start":
+        bot.deleteWebhook()
         # if dict(data).get(user, None) is None:
         #     bot.sendMessage(chat_id=chat_id, text="You Are Not Allowed", reply_to_message_id=msg_id)
         #     return "OK"
         # ------------------ <name> --------------------- #
         update_id += 1
         name, name_id = get_bot_inputs(chat_id, "Enter Manga Name", update_id)
+        if '/start' in name:
+            bot.sendMessage(chat_id=chat_id,text="send '/start again")
+            bot.setWebhook('{URL}{HOOK}'.format(URL=URL, HOOK=TOKEN))
+            return 'OK'
         # ------------------ </name> -------------------- #
         # ------------------ <manga-url> --------------------- #
         update_id += 1
         manga_url, manga_url_id = get_bot_inputs(chat_id, "Enter Manga URL", update_id)
+        if '/start' in manga_url:
+            bot.sendMessage(chat_id=chat_id,text="send '/start again")
+            bot.setWebhook('{URL}{HOOK}'.format(URL=URL, HOOK=TOKEN))
+            return 'OK'
         # ------------------ </mang-url> -------------------- #
         # ------------------ <start> --------------------- #
         update_id += 1
         start, start_id = get_bot_inputs(chat_id, "Enter Starting Chapter", update_id)
+        if '/start' in start:
+            bot.sendMessage(chat_id=chat_id,text="send '/start again")
+            bot.setWebhook('{URL}{HOOK}'.format(URL=URL, HOOK=TOKEN))
+            return 'OK'
         # ------------------ </start> -------------------- #
         # ------------------ <end> --------------------- #
         update_id += 1
         end, end_id = get_bot_inputs(chat_id, "Enter Ending Chapter", update_id)
+        if '/start' in end:
+            bot.sendMessage(chat_id=chat_id,text="send '/start again")
+            bot.setWebhook('{URL}{HOOK}'.format(URL=URL, HOOK=TOKEN))
+            return 'OK'
         # ------------------ </end> -------------------- #
         print("[ BOT ] ", name, " : ", manga_url, " : ", start, " : ", end)
         if name == manga_url == start == end is None:
