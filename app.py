@@ -27,10 +27,10 @@ bot = telegram.Bot(token=TOKEN)
 
 app = Flask(__name__)
 
-manga_name = ""
-manga_main_url = ""
-manga_start = ""
-manga_end = ""
+# manga_name = ""
+# manga_main_url = ""
+# manga_start = ""
+# manga_end = ""
 
 stop_connect = False
 
@@ -43,8 +43,7 @@ def link_test(url):
         return False
 
 
-def download_chapter(chapter_url, chat_id, ch):
-    global manga_name
+def download_chapter(name, chapter_url, chat_id, ch):
     bin_path = "./bin/"
     if not os.path.isdir(bin_path):
         os.mkdir(bin_path)
@@ -62,7 +61,7 @@ def download_chapter(chapter_url, chat_id, ch):
     page = 1
     session = requests.Session()
     msg = bot.sendMessage(chat_id=chat_id, text="\nDownloading PAGE :000")
-    pdf_filename = str(bin_path + manga_name + " Chapter " + str(ch) + ".pdf")
+    pdf_filename = str(bin_path + name + " Chapter " + str(ch) + ".pdf")
     temp2 = "./bin/temp2.pdf"
     temp3 = "./bin/temp3.pdf"
     while True:
@@ -111,12 +110,12 @@ def download_chapter(chapter_url, chat_id, ch):
     return
 
 
-def connect(chatID):
+def connect(name, manga_url, start, end, chatID):
     global stop_connect
 
-    main_url = "/".join(manga_main_url.split("/")[0:-1])
-    start = float(manga_start)
-    end = float(manga_end)
+    main_url = "/".join(manga_url.split("/")[0:-1])
+    start = float(start)
+    end = float(end)
     temp = float(start)
 
     while temp <= end:
@@ -130,14 +129,14 @@ def connect(chatID):
             chapter = str(ch).zfill(6)
             stop = False
         if link_test(main_url + "/" + chapter + "-001.png"):
-            print("[ INFO ] ", chapter, ": STARTED")
-            download_chapter(str(main_url + "/" + chapter), chatID, chapter)
-            print("[ INFO ] ", chapter, ": COMPLETED")
+            print("[ INFO ] ", name, " ", chapter, ": STARTED")
+            download_chapter(name, str(main_url + "/" + chapter), chatID, chapter)
+            print("[ INFO ] ", name, " ", chapter, ": COMPLETED")
         elif stop:
-            bot.sendMessage(chat_id=chatID, text=(manga_name + " Chapter " + chapter + " Not Found"))
+            bot.sendMessage(chat_id=chatID, text=(name + " Chapter " + chapter + " Not Found"))
             return
         else:
-            print("[ INFO ] ", chapter, ": NOT-AVAILABLE")
+            print("[ INFO ] ", name, " ", chapter, ": NOT-AVAILABLE")
         temp = round(temp, 10) + round(0.1, 10)
         gc.collect()
     bot.sendMessage(chat_id=chatID, text="Completed")
@@ -145,24 +144,26 @@ def connect(chatID):
     return
 
 
-def read_input():
-    with open("input.json", "r") as f:
-        data = json.load(f)
-    return data
-
-
-def write_input(data):
-    with open("input.json", "w") as f:
-        f.write(str(json.dumps(data)))
+def get_bot_inputs(chat_id, msg, update_id):
+    bot.sendMessage(chat_id=chat_id, text=msg)
+    input_update = bot.getUpdates(offset=update_id, timeout=200)
+    if not input_update:
+        bot.sendMessage(text="timeout Send '/start' agian")
+        bot.setWebhook('{URL}{HOOK}'.format(URL=URL, HOOK=TOKEN))
+        return None, None
+    input_message = input_update.pop().message
+    input_txt = input_message.text
+    input_id = input_message.message_id
+    return input_txt, input_id
 
 
 @app.route('/{}'.format(TOKEN), methods=['POST'])
 def respond():
-    global manga_name, manga_main_url, manga_start, manga_end, stop_connect
+    global stop_connect
     # retrieve the message in JSON and then transform it to Telegram object
     update = telegram.Update.de_json(request.get_json(force=True), bot)
     user = update.message.from_user.name
-    update_id = update.update_id + 1
+    update_id = update.update_id
     chat_id = update.message.chat.id
     msg_id = update.message.message_id
 
@@ -176,42 +177,31 @@ def respond():
         #     bot.sendMessage(chat_id=chat_id, text="You Are Not Allowed", reply_to_message_id=msg_id)
         #     return "OK"
         # ------------------ <name> --------------------- #
-        bot.sendMessage(chat_id=chat_id, text="Enter Manga Name")
-        name_update = bot.getUpdates(offset=update_id, timeout=200)
-        name_message = name_update.pop().message
-        name = name_message.text
-        name_id = name_message.message_id
+        update_id += 1
+        name, name_id = get_bot_inputs(chat_id, "Enter Manga Name", update_id)
         # ------------------ </name> -------------------- #
-        update_id += 1
         # ------------------ <manga-url> --------------------- #
-        bot.sendMessage(chat_id=chat_id, text="Enter Manga URL")
-        manga_url_update = bot.getUpdates(offset=update_id, timeout=200)
-        manga_url_message = manga_url_update.pop().message
-        manga_url = manga_url_message.text
-        manga_url_id = manga_url_message.message_id
+        update_id += 1
+        manga_url, manga_url_id = get_bot_inputs(chat_id, "Enter Manga URL", update_id)
         # ------------------ </mang-url> -------------------- #
-        update_id += 1
         # ------------------ <start> --------------------- #
-        bot.sendMessage(chat_id=chat_id, text="Enter Starting Chapter")
-        start_update = bot.getUpdates(offset=update_id, timeout=200)
-        start_message = start_update.pop().message
-        start = start_message.text
-        start_id = start_message.message_id
-        # ------------------ </start> -------------------- #
         update_id += 1
+        start, start_id = get_bot_inputs(chat_id, "Enter Starting Chapter", update_id)
+        # ------------------ </start> -------------------- #
         # ------------------ <end> --------------------- #
-        bot.sendMessage(chat_id=chat_id, text="Enter Starting Chapter")
-        end_update = bot.getUpdates(offset=update_id, timeout=200)
-        end_message = end_update.pop().message
-        end = end_message.text
-        end_id = end_message.message_id
-        print("[ BOT ] ",name," : ",manga_url," : ",start," : ",end)
+        update_id += 1
+        end, end_id = get_bot_inputs(chat_id, "Enter Ending Chapter", update_id)
         # ------------------ </end> -------------------- #
+        print("[ BOT ] ", name, " : ", manga_url, " : ", start, " : ", end)
+        if name == manga_url == start == end is None:
+            bot.setWebhook('{URL}{HOOK}'.format(URL=URL, HOOK=TOKEN))
+            return 'OK'
 
-        # response = "Enter Manga Name"
-        # print("[ BOT ] ", bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id))
-        # gc.collect()
+        thd = threading.Thread(name="connect_thread", target=connect, args=(name, manga_url, start, end, chat_id,))
+        thd.start()
+
         bot.setWebhook('{URL}{HOOK}'.format(URL=URL, HOOK=TOKEN))
+        gc.collect()
         return 'OK'
     elif "/add" in userText:
         k = userText[5:]
@@ -239,54 +229,6 @@ def respond():
 
     elif "/select" in userText:
         k = userText.split()[1]
-        return "OK"
-
-    elif not read_input()[user]["NAME"]:
-        data = read_input()
-        data[user]["NAME"] = userText
-
-        write_input(data)
-
-        response = "Enter URL"
-        bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
-        gc.collect()
-
-        return 'OK'
-    elif not read_input()[user]["MANGA_URL"]:
-        data = read_input()
-        data[user]["MANGA_URL"] = userText
-        write_input(data)
-
-        response = "Starting Chapter"
-        bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
-        gc.collect()
-
-        return 'OK'
-    elif not read_input()[user]["START"]:
-        data = read_input()
-        data[user]["START"] = userText
-        response = "Ending Chapter"
-        write_input(data)
-        bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
-        return 'OK'
-    elif not read_input()[user]["END"]:
-        data = read_input()
-        data[user]["END"] = userText
-
-        manga_name = data[user]["NAME"]
-        manga_main_url = data[user]["MANGA_URL"]
-        manga_start = data[user]["START"]
-        manga_end = data[user]["END"]
-
-        response = "NAME   :" + manga_name + "\nURL    :" + manga_main_url + "\nSTART  :" + manga_start + "\nEND    :" + manga_end + "\n\nDownloading Chapters ..."
-        manga_main_url = data[user]["MANGA_URL"]
-        write_input(data)
-        bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id, disable_web_page_preview=True)
-        stop_connect = False
-
-        thd = threading.Thread(name="connect_thread", target=connect, args=(chat_id,))
-        thd.start()
-        gc.collect()
         return 'OK'
     else:
         response = "Restart the Bot by Sending '/start' command"

@@ -1,24 +1,16 @@
-from flask import Flask
-import logging
+import telegram
+from configparser import ConfigParser
 
-logging.basicConfig(
-    filename="bot.log",
-    filemode="w",
-    format="%(asctime)s : %(name)s : %(levelname)s : %(message)s"
-)
+config = ConfigParser()
+config.read('bot.ini')
 
-logging.getLogger("exp").setLevel(logging.DEBUG)
+TOKEN = config['BOT']['TOKEN']
+URL = config['SERVER']['URL']
+bot = telegram.Bot(token=TOKEN)
+# print(bot.getWebhookInfo())
+# print(bot.getUpdates(offset=None,timeout=10).pop())
 
-LOGGER = logging.getLogger(__name__)
-LOGGER.setLevel(logging.CRITICAL)
-app = Flask(__name__)
-
-
-
-@app.route("/api")
-def home():
-    LOGGER.debug("debug")
-    LOGGER.info("/api is called")
-    return {"/status":"gives status"}
-if __name__ == "__main__":
-    app.run(host='https://api.telegram.org/')
+a = None
+b = None
+if a == b is None:
+    print("kk")
