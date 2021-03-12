@@ -160,7 +160,7 @@ def connect(manga_name, manga_url, manga_start, manga_end, chatID):
 
 
 class RespondToBot(Resource):
-    def get(self):
+    def post(self):
         global uni_message
         # retrieve the message in JSON and then transform it to Telegram object
         update = telegram.Update.de_json(request.get_json(force=True), bot)
