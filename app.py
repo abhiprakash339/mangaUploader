@@ -274,7 +274,7 @@ class Index(Resource):
         return 'WELCOME TO MANGA-UPLOADER'
 
 
-api.add_resource(respond, '/{}'.format(TOKEN), methods=['POST'])
+api.add_resource(RespondToBot, '/{}'.format(TOKEN), methods=['POST'])
 api.add_resource(Index, "/")
 api.add_resource(Favicon, '/favicon.ico')
 api.add_resource(SetWebhook, '/setwebhook')
