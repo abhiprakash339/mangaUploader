@@ -53,7 +53,7 @@ def link_test(url):
 
 
 def download_chapter(manga_name,chapter_url, chat_id, ch):
-    bin_path = "./bin/"
+    bin_path = f"./{chat_id}/"
     if not os.path.isdir(bin_path):
         os.mkdir(bin_path)
     else:
@@ -71,8 +71,8 @@ def download_chapter(manga_name,chapter_url, chat_id, ch):
     session = requests.Session()
     msg = bot.sendMessage(chat_id=chat_id, text="\nDownloading PAGE :000")
     pdf_filename = str(bin_path + manga_name + " Chapter " + str(ch) + ".pdf")
-    temp2 = "./bin/temp2.pdf"
-    temp3 = "./bin/temp3.pdf"
+    temp2 = f"./{chat_id}/temp2.pdf"
+    temp3 = f"./{chat_id}/temp3.pdf"
     while True:
         merger = PdfFileMerger()
         temp_url = str(chapter_url + "-" + str(page).zfill(3) + ".png")
@@ -147,6 +147,7 @@ def connect(manga_name, manga_url, manga_start, manga_end, chatID):
             return
         else:
             print("[ INFO ] ", chapter, ": NOT-AVAILABLE")
+            bot.sendMessage(chat_id=chatID, text=(manga_name + " Chapter " + chapter + " NOT-AVAILABLE"))
         temp = round(temp, 10) + round(0.1, 10)
         gc.collect()
     bot.sendMessage(chat_id=chatID, text="Completed")
