@@ -175,42 +175,8 @@ class RespondToBot(Resource):
         print("[INFO] got text message :", userText)
         usr_data = USERS.find_one({"user": user})
         usr_state = int(usr_data["Active"])
-        if usr_state > 0:
-            if usr_state == 1:
-                usr_data["manga-name"] = userText
-                usr_data["Active"] = "2"
-                response = "Enter Manga URL"
-                bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
-                USERS.update_one({"user": user}, {"$set": usr_data})
-                return 'OK'
-            elif usr_state == 2:
-                usr_data["manga-url"] = userText
-                usr_data["Active"] = "3"
-                response = "Enter Starting chapter"
-                bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
-                USERS.update_one({"user": user}, {"$set": usr_data})
-                return 'OK'
-            elif usr_state == 3:
-                usr_data["manga-start"] = userText
-                usr_data["Active"] = "4"
-                response = "Enter Ending Chapter Name"
-                bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
-                USERS.update_one({"user": user}, {"$set": usr_data})
-                return 'OK'
-            elif usr_state == 4:
-                usr_data["manga-end"] = userText
-                usr_data["Active"] = "0"
-                response = str(
-                    "NAME  : " + usr_data["manga-name"] +
-                    "URL   : " + usr_data["manga-url"] +
-                    "START : " + usr_data["manga-start"] +
-                    "END   : " + usr_data["manga-end"])
-                bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
-                USERS.update_one({"user": user}, {"$set": usr_data})
-                thd = threading.Thread(name="connect_thread", target=connect, args=(usr_data["manga-name"],usr_data["manga-url"],usr_data["manga-start"],usr_data["manga-end"],chat_id,))
-                thd.start()
-                return 'OK'
-        elif userText == "/start":
+
+        if userText == "/start":
             usr_data["Active"] = "1"
             usr_data["manga-name"] = ""
             usr_data["manga-url"] = ""
@@ -248,6 +214,32 @@ class RespondToBot(Resource):
         elif "/select" in userText:
             k = userText.split()[1]
             return "OK"
+        elif usr_state > 0:
+            if usr_state == 1:
+                usr_data["manga-name"] = userText
+                usr_data["Active"] = "2"
+                response = "Enter Manga URL"
+            elif usr_state == 2:
+                usr_data["manga-url"] = userText
+                usr_data["Active"] = "3"
+                response = "Enter Starting chapter"
+            elif usr_state == 3:
+                usr_data["manga-start"] = userText
+                usr_data["Active"] = "4"
+                response = "Enter Ending Chapter Name"
+            elif usr_state == 4:
+                usr_data["manga-end"] = userText
+                usr_data["Active"] = "0"
+                response = str(
+                    "NAME  : " + usr_data["manga-name"] +
+                    "URL   : " + usr_data["manga-url"] +
+                    "START : " + usr_data["manga-start"] +
+                    "END   : " + usr_data["manga-end"])
+                thd = threading.Thread(name="connect_thread", target=connect, args=(usr_data["manga-name"],usr_data["manga-url"],usr_data["manga-start"],usr_data["manga-end"],chat_id,))
+                thd.start()
+            bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
+            USERS.update_one({"user": user}, {"$set": usr_data})
+            return 'OK'
         else:
             response = "Restart the Bot by Sending '/start' command"
             bot.sendMessage(chat_id=chat_id, text=response)
