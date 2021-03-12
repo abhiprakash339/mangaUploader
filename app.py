@@ -16,6 +16,8 @@ from PIL import Image
 from PyPDF2 import PdfFileMerger
 from configparser import ConfigParser
 from flask import Flask, request, send_from_directory
+from flask_restful import Api, Resource
+from pymongo import MongoClient
 
 config = ConfigParser()
 config.read('bot.ini')
@@ -23,8 +25,19 @@ config.read('bot.ini')
 TOKEN = config['BOT']['TOKEN']
 URL = config['SERVER']['URL']
 bot = telegram.Bot(token=TOKEN)
+config = ConfigParser()
+config.read("bot.ini")
+print(config["API"]["MONGO-DB"])
+
+client = MongoClient(config["API"]["MONGO-DB"])
+db = client.get_database("Telegram_Bot")
+#
+# user_db = db.list_collection_names()
+# print(user_db)
+USERS = db.get_collection('users_inputs')
 
 app = Flask(__name__)
+api = Api(app)
 
 manga_name = ""
 manga_main_url = ""
@@ -32,6 +45,8 @@ manga_start = ""
 manga_end = ""
 
 stop_connect = False
+
+uni_message = ""
 
 
 def link_test(url):
@@ -110,7 +125,7 @@ def download_chapter(chapter_url, chat_id, ch):
     return
 
 
-def connect(chatID):
+def connect(manga_name, manga_url, manga_start, manga_end, chatID):
     global stop_connect
 
     main_url = "/".join(manga_main_url.split("/")[0:-1])
@@ -144,166 +159,124 @@ def connect(chatID):
     return
 
 
-def read_input():
-    with open("input.json", "r") as f:
-        data = json.load(f)
-    return data
+class RespondToBot(Resource):
+    def get(self):
+        global uni_message
+        # retrieve the message in JSON and then transform it to Telegram object
+        update = telegram.Update.de_json(request.get_json(force=True), bot)
+        user = update.message.from_user.name
+        update_id = update.update_id + 1
+        print("[ BOT ] Update ID :", update_id)
+        chat_id = update.message.chat.id
+        msg_id = update.message.message_id
 
-
-def write_input(data):
-    with open("input.json", "w") as f:
-        f.write(str(json.dumps(data)))
-
-
-@app.route('/{}'.format(TOKEN), methods=['POST'])
-def respond():
-    global manga_name, manga_main_url, manga_start, manga_end, stop_connect
-    # retrieve the message in JSON and then transform it to Telegram object
-    update = telegram.Update.de_json(request.get_json(force=True), bot)
-    user = update.message.from_user.name
-    update_id = update.update_id + 1
-    print("[ BOT ] Update ID :",update_id)
-    chat_id = update.message.chat.id
-    msg_id = update.message.message_id
-
-    # Telegram understands UTF-8, so encode text for unicode compatibility
-    userText = update.message.text.encode('utf-8').decode()
-    print("[INFO] got text message :", userText)
-
-    if userText == "/start":
-        data = read_input()
-        if dict(data).get(user, None) is None:
-            bot.sendMessage(chat_id=chat_id, text="You Are Not Allowed", reply_to_message_id=msg_id)
+        # Telegram understands UTF-8, so encode text for unicode compatibility
+        userText = update.message.text.encode('utf-8').decode()
+        print("[INFO] got text message :", userText)
+        usr_data = USERS.find_one({"user": user})
+        usr_state = int(usr_data["Active"])
+        if usr_state > 0:
+            if usr_state == 1:
+                usr_data["manga-name"] = userText
+                usr_data["Active"] = "2"
+                response = "Enter Manga URL"
+                bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
+                USERS.update_one({"user": user}, {"$set": usr_data})
+                return 'OK'
+            elif usr_state == 2:
+                usr_data["manga-url"] = userText
+                usr_data["Active"] = "3"
+                response = "Enter Starting chapter"
+                bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
+                USERS.update_one({"user": user}, {"$set": usr_data})
+                return 'OK'
+            elif usr_state == 3:
+                usr_data["manga-start"] = userText
+                usr_data["Active"] = "4"
+                response = "Enter Ending Chapter Name"
+                bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
+                USERS.update_one({"user": user}, {"$set": usr_data})
+                return 'OK'
+            elif usr_state == 4:
+                usr_data["manga-end"] = userText
+                usr_data["Active"] = "0"
+                response = str(
+                    "NAME  : " + usr_data["manga-name"] +
+                    "URL   : " + usr_data["manga-url"] +
+                    "START : " + usr_data["manga-start"] +
+                    "END   : " + usr_data["manga-end"])
+                bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
+                USERS.update_one({"user": user}, {"$set": usr_data})
+                thd = threading.Thread(name="connect_thread", target=connect, args=(usr_data["manga-name"],usr_data["manga-url"],usr_data["manga-start"],usr_data["manga-end"],chat_id,))
+                thd.start()
+                return 'OK'
+        elif userText == "/start":
+            usr_data["Active"] = "1"
+            usr_data["manga-name"] = ""
+            usr_data["manga-url"] = ""
+            usr_data["manga-start"] = ""
+            usr_data["manga-end"] = ""
+            response = "Enter Manga Name"
+            USERS.update_one({"user": user}, {"$set": usr_data})
+            print("[ BOT ] ", bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id))
+            gc.collect()
+            return 'OK'
+        elif "/add" in userText:
+            k = userText[5:]
+            d = dict(json.loads(k))
+            print("[ INFO ] ", d)
+            with open("manga_data.json", "r") as read_json:
+                m = dict(json.load(read_json))
+                key = list(d.keys())[0]
+                m[key] = d[key]
+            print(json.dumps(m))
+            with open("manga_data.json", "w") as write_json:
+                write_json.write(json.dumps(m))
+            bot.sendMessage(chat_id=chat_id, text="Added", reply_to_message_id=msg_id, disable_web_page_preview=True)
+            gc.collect()
             return "OK"
-        bot.sendMessage(chat_id=chat_id,text="Enter Manga Name")
-        # bot.deleteWebhook()
-        # name_update = bot.getUpdates(offset=update_id, timeout=200)
+        elif "/ongoing" in userText:
+            with open("manga_data.json", "r") as read_json:
+                m = dict(json.load(read_json))
+                temp = ""
+                for i in m:
+                    temp += i + " : " + m[i] + "\n"
+                bot.sendMessage(chat_id=chat_id, text=temp, reply_to_message_id=msg_id, disable_web_page_preview=True)
+            gc.collect()
+            return "OK"
 
-        stop_connect = True
-        data[user]["NAME"] = ""
-        data[user]["MANGA_URL"] = ""
-        data[user]["START"] = ""
-        data[user]["END"] = ""
-
-        write_input(data)
-
-        response = "Enter Manga Name"
-        print("[ BOT ] ", bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id))
-        gc.collect()
-        return 'OK'
-    elif "/add" in userText:
-        k = userText[5:]
-        d = dict(json.loads(k))
-        print("[ INFO ] ", d)
-        with open("manga_data.json", "r") as read_json:
-            m = dict(json.load(read_json))
-            key = list(d.keys())[0]
-            m[key] = d[key]
-        print(json.dumps(m))
-        with open("manga_data.json", "w") as write_json:
-            write_json.write(json.dumps(m))
-        bot.sendMessage(chat_id=chat_id, text="Added", reply_to_message_id=msg_id, disable_web_page_preview=True)
-        gc.collect()
-        return "OK"
-    elif "/ongoing" in userText:
-        with open("manga_data.json", "r") as read_json:
-            m = dict(json.load(read_json))
-            temp = ""
-            for i in m:
-                temp += i + " : " + m[i] + "\n"
-            bot.sendMessage(chat_id=chat_id, text=temp, reply_to_message_id=msg_id, disable_web_page_preview=True)
-        gc.collect()
-        return "OK"
-
-    elif "/select" in userText:
-        k = userText.split()[1]
-        return "OK"
-
-    elif not read_input()[user]["NAME"]:
-        data = read_input()
-        data[user]["NAME"] = userText
-
-        write_input(data)
-
-        response = "Enter URL"
-        bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
-        gc.collect()
-
-        return 'OK'
-    elif not read_input()[user]["MANGA_URL"]:
-        data = read_input()
-        data[user]["MANGA_URL"] = userText
-        write_input(data)
-
-        response = "Starting Chapter"
-        bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
-        gc.collect()
-
-        return 'OK'
-    elif not read_input()[user]["START"]:
-        data = read_input()
-        data[user]["START"] = userText
-        response = "Ending Chapter"
-        write_input(data)
-        bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
-        return 'OK'
-    elif not read_input()[user]["END"]:
-        data = read_input()
-        data[user]["END"] = userText
-
-        manga_name = data[user]["NAME"]
-        manga_main_url = data[user]["MANGA_URL"]
-        manga_start = data[user]["START"]
-        manga_end = data[user]["END"]
-
-        response = "NAME   :" + manga_name + "\nURL    :" + manga_main_url + "\nSTART  :" + manga_start + "\nEND    :" + manga_end + "\n\nDownloading Chapters ..."
-        manga_main_url = data[user]["MANGA_URL"]
-        write_input(data)
-        bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id, disable_web_page_preview=True)
-        stop_connect = False
-
-        thd = threading.Thread(name="connect_thread", target=connect, args=(chat_id,))
-        thd.start()
-        gc.collect()
-        return 'OK'
-    else:
-        response = "Restart the Bot by Sending '/start' command"
-        bot.sendMessage(chat_id=chat_id, text=response)
-        return 'OK'
+        elif "/select" in userText:
+            k = userText.split()[1]
+            return "OK"
+        else:
+            response = "Restart the Bot by Sending '/start' command"
+            bot.sendMessage(chat_id=chat_id, text=response)
+            return 'OK'
 
 
-@app.route('/setwebhook', methods=['GET', 'POST'])
-def set_webhook():
-    s = bot.setWebhook('{URL}{HOOK}'.format(URL=URL, HOOK=TOKEN))
-    if s:
-        return "WEBHOOK SETUP SUCCESSFUL"
-    else:
-        return "WEBHOOK SETUP FAILED"
+class SetWebhook(Resource):
+    def get(self):
+        s = bot.setWebhook('{URL}{HOOK}'.format(URL=URL, HOOK=TOKEN))
+        if s:
+            return "WEBHOOK SETUP SUCCESSFUL"
+        else:
+            return "WEBHOOK SETUP FAILED"
 
 
-@app.route('/favicon.ico')
-def favicon():
-    return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico',
-                               mimetype='image/vnd.microsoft.icon')
+class Favicon(Resource):
+    def get(self):
+        return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico',
+                                   mimetype='image/vnd.microsoft.icon')
 
 
-@app.route("/test")
-def test():
-
-    bot.deleteWebhook()
-
-    up = bot.getUpdates(offset=None, timeout=200)
-    print(up.pop().message.text)
-    # bot.sendMessage(text=)
-    bot.setWebhook('{URL}{HOOK}'.format(URL=URL, HOOK=TOKEN))
-    print(bot.getWebhookInfo())
-    return "OK"
+class Index(Resource):
+    def get(self):
+        return 'WELCOME TO MANGA-UPLOADER'
 
 
-@app.route('/')
-def index():
-    return 'WELCOME TO MANGA-UPLOADER'
-
-
+api.add_resource(respond, '/{}'.format(TOKEN), methods=['POST'])
+api.add_resource(Index, "/")
+api.add_resource(Favicon, '/favicon.ico')
+api.add_resource(SetWebhook, '/setwebhook')
 if __name__ == '__main__':
     app.run(threaded=True)

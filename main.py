@@ -1,11 +1,46 @@
-import sqlite3
+from pymongo import MongoClient
+from configparser import ConfigParser
 
-bot_db = sqlite3.connect('exp.db')
+config = ConfigParser()
+config.read("bot.ini")
+print(config["API"]["MONGO-DB"])
 
-# bot_db_cursor = bot_db.cursor()
-# bot_db_cursor.execute('''CREATE TABLE stocks(date text, trans text, symbol text, qty real, price real)''')
-# bot_db_cursor.execute("INSERT INTO stocks VALUES ('2006-01-05','BUY','RHAT',100,35.14)")
-# bot_db.commit()
-# bot_db.close()
-for i in bot_db.execute('SELECT * FROM stocks'):
-    print(i)
+client = MongoClient(config["API"]["MONGO-DB"])
+db = client.get_database("Telegram_Bot")
+#
+# user_db = db.list_collection_names()
+# print(user_db)
+
+doc = db.get_collection('users_inputs')
+usr_data = doc.find_one({"user": "@Itachi_Uchiha_123"})
+if usr_data["Active"] == "1":
+    usr_data["manga-name"] = "one piece"
+    usr_data["Active"] = "1"
+    doc.update_one({"user": "@Itachi_Uchiha_123"},{"$set": usr_data})
+print(list(doc.find()))
+# # doc.drop_index([("user", 1)])
+# # doc.create_index([("user", 1)], unique=True)
+#
+# # data = {
+# #     "user": "@Itachi_Uchiha_123",
+# #     "Active": "0",
+# #     "manga-name": "",
+# #     "manga-url": "",
+# #     "manga-start": "",
+# #     "manga-end": ""
+# # }
+# # up = {
+# # "Active": "0"
+# # }
+# # doc.update_one({"user": "@Itachi_Uchiha_123"},{"$set":up})
+#
+# # try:
+# #     print(doc.insert_one(data))
+# # except Exception as excp:
+# #     print(db.error())
+# #     print(excp)
+#
+# # print(list(doc.find_one_and_delete({"user": "@Itachi_Uchiha_123"})))
+# # print(user_db.count_documents({}))
+# print(list(doc.find()))
+# print(len(list(doc.find())))
