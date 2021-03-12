@@ -39,11 +39,6 @@ USERS = db.get_collection('users_inputs')
 app = Flask(__name__)
 api = Api(app)
 
-manga_name = ""
-manga_main_url = ""
-manga_start = ""
-manga_end = ""
-
 stop_connect = False
 
 uni_message = ""
@@ -57,8 +52,7 @@ def link_test(url):
         return False
 
 
-def download_chapter(chapter_url, chat_id, ch):
-    global manga_name
+def download_chapter(manga_name,chapter_url, chat_id, ch):
     bin_path = "./bin/"
     if not os.path.isdir(bin_path):
         os.mkdir(bin_path)
@@ -127,8 +121,9 @@ def download_chapter(chapter_url, chat_id, ch):
 
 def connect(manga_name, manga_url, manga_start, manga_end, chatID):
     global stop_connect
-
-    main_url = "/".join(manga_main_url.split("/")[0:-1])
+    print("Name :",manga_name,"\nURl :",manga_url,"start :",manga_start,"end :",manga_end)
+    main_url = "/".join(manga_url.split("/")[0:-1])
+    print(main_url)
     start = float(manga_start)
     end = float(manga_end)
     temp = float(start)
@@ -145,7 +140,7 @@ def connect(manga_name, manga_url, manga_start, manga_end, chatID):
             stop = False
         if link_test(main_url + "/" + chapter + "-001.png"):
             print("[ INFO ] ", chapter, ": STARTED")
-            download_chapter(str(main_url + "/" + chapter), chatID, chapter)
+            download_chapter(manga_name,str(main_url + "/" + chapter), chatID, chapter)
             print("[ INFO ] ", chapter, ": COMPLETED")
         elif stop:
             bot.sendMessage(chat_id=chatID, text=(manga_name + " Chapter " + chapter + " Not Found"))
@@ -161,7 +156,7 @@ def connect(manga_name, manga_url, manga_start, manga_end, chatID):
 
 class RespondToBot(Resource):
     def post(self):
-        global uni_message
+        global stop_connect
         # retrieve the message in JSON and then transform it to Telegram object
         update = telegram.Update.de_json(request.get_json(force=True), bot)
         user = update.message.from_user.name
@@ -177,6 +172,7 @@ class RespondToBot(Resource):
         usr_state = int(usr_data["Active"])
 
         if userText == "/start":
+            stop_connect = True
             usr_data["Active"] = "1"
             usr_data["manga-name"] = ""
             usr_data["manga-url"] = ""
@@ -232,9 +228,10 @@ class RespondToBot(Resource):
                 usr_data["Active"] = "0"
                 response = str(
                     "NAME  : " + usr_data["manga-name"] +
-                    "URL   : " + usr_data["manga-url"] +
-                    "START : " + usr_data["manga-start"] +
-                    "END   : " + usr_data["manga-end"])
+                    "\nURL   : " + usr_data["manga-url"] +
+                    "\nSTART : " + usr_data["manga-start"] +
+                    "\nEND   : " + usr_data["manga-end"])
+                stop_connect = False
                 thd = threading.Thread(name="connect_thread", target=connect, args=(usr_data["manga-name"],usr_data["manga-url"],usr_data["manga-start"],usr_data["manga-end"],chat_id,))
                 thd.start()
             bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
