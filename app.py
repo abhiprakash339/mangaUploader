@@ -27,14 +27,11 @@ URL = config['SERVER']['URL']
 bot = telegram.Bot(token=TOKEN)
 config = ConfigParser()
 config.read("bot.ini")
-print(config["API"]["MONGO-DB"])
 
 client = MongoClient(config["API"]["MONGO-DB"])
 db = client.get_database("Telegram_Bot")
-#
-# user_db = db.list_collection_names()
-# print(user_db)
 USERS = db.get_collection('users_inputs')
+MANGA_COLLECTION = db.get_collection('manga_url_data')
 
 app = Flask(__name__)
 api = Api(app)
@@ -184,27 +181,32 @@ class RespondToBot(Resource):
             print("[ BOT ] ", bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id))
             gc.collect()
             return 'OK'
+        elif "/help" in userText:
+            msg = '/start : it will start the pdf upload\n/add {"manga-name":"One-Piece",' \
+                  '"manga-url":"https://temp.compsci88.com/manga/One-Piece/1007-001.png","manga-chapter":"1007"} '
+            bot.sendMessage(chat_id=chat_id, text=msg, reply_to_message_id=msg_id,
+                            disable_web_page_preview=True)
+            return 'OK'
         elif "/add" in userText:
             k = userText[5:]
-            d = dict(json.loads(k))
-            print("[ INFO ] ", d)
-            with open("manga_data.json", "r") as read_json:
-                m = dict(json.load(read_json))
-                key = list(d.keys())[0]
-                m[key] = d[key]
-            print(json.dumps(m))
-            with open("manga_data.json", "w") as write_json:
-                write_json.write(json.dumps(m))
-            bot.sendMessage(chat_id=chat_id, text="Added", reply_to_message_id=msg_id, disable_web_page_preview=True)
+            try:
+                d = dict(json.loads(k))
+                print("[ INFO ] ", d)
+                MANGA_COLLECTION.insert_one(d)
+                bot.sendMessage(chat_id=chat_id, text="Added", reply_to_message_id=msg_id,
+                                disable_web_page_preview=True)
+            except Exception as excp:
+                print("[ INFO ] ", excp.args)
+                bot.sendMessage(chat_id=chat_id, text=str(excp.args), reply_to_message_id=msg_id,
+                                disable_web_page_preview=True)
+
             gc.collect()
             return "OK"
         elif "/ongoing" in userText:
-            with open("manga_data.json", "r") as read_json:
-                m = dict(json.load(read_json))
-                temp = ""
-                for i in m:
-                    temp += i + " : " + m[i] + "\n"
-                bot.sendMessage(chat_id=chat_id, text=temp, reply_to_message_id=msg_id, disable_web_page_preview=True)
+            temp = ""
+            for i in MANGA_COLLECTION.find():
+                temp += str(i["manga-name"] + " : " + i['manga-url'] + "\n")
+            bot.sendMessage(chat_id=chat_id, text=temp, reply_to_message_id=msg_id, disable_web_page_preview=True)
             gc.collect()
             return "OK"
 
