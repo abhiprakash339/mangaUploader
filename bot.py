@@ -6,7 +6,6 @@ import threading
 import telegram
 import requests
 
-
 from PIL import Image
 from selenium import webdriver
 from pymongo import MongoClient
@@ -76,12 +75,13 @@ class MangaCrowler():
                 chapter = str(ch)
                 stop = False
             print("[ INFO ] :", chapter)
-            bot.edit_message_text(chat_id=chat_id, text=f"{name}\n--------------------------\nChapter :{str(chapter).zfill(3)}",
+            bot.edit_message_text(chat_id=chat_id,
+                                  text=f"{name}\n--------------------------\nChapter :{str(chapter).zfill(3)}",
                                   message_id=msg.message_id)
             pdf_filename = str(bin_path + name + " Chapter " + str(chapter).zfill(3) + ".pdf")
             url = self.get_original_url(name, chapter, 1)
             temp = round(temp, 10) + round(0.1, 10)
-            print(url)
+            print("[ INFO ] Original URL :", url)
             if url is None and stop:
                 break
             elif url is None and not stop:
@@ -124,7 +124,9 @@ class MangaCrowler():
                 gc.collect()
 
             with open(pdf_filename, 'rb') as file:
-                bot.edit_message_text(chat_id=chat_id, text=f"{name}\n=====Uploading=====\n\nChapter :{str(chapter).zfill(3)}", message_id=msg.message_id)
+                bot.edit_message_text(chat_id=chat_id,
+                                      text=f"{name}\n=====Uploading=====\n\nChapter :{str(chapter).zfill(3)}",
+                                      message_id=msg.message_id)
                 print("[ BOT ] ", bot.sendDocument(document=file, chat_id=chat_id, ))
 
                 bot.edit_message_text(chat_id=chat_id, text="Uploading PDF Completed", message_id=msg.message_id)
@@ -267,7 +269,3 @@ api.add_resource(Favicon, '/favicon.ico')
 api.add_resource(SetWebhook, '/setwebhook')
 if __name__ == '__main__':
     app.run(threaded=True)
-    obj = MangaCrowler('one piece', '991', '991', '3030')
-    # obj.start()
-    t = threading.Thread(name="MANGA", target=obj.start())
-    t.start()
