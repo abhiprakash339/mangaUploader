@@ -50,7 +50,7 @@ class MangaCrowler():
         self.chat_id = chat_id
         self.session = requests.Session()
 
-    def start(self):
+    def start_crowling(self):
         self.manga_crowler(self.manga_name, self.manga_start, self.manga_end, self.chat_id)
 
     def manga_crowler(self, name, start, end, chat_id):
@@ -137,6 +137,7 @@ class MangaCrowler():
             gc.collect()
         shutil.rmtree(bin_path)
         self.driver.close()
+        return
 
     def get_original_url(self, name, chapter, page):
         url = f'https://manga4life.com/read-online/{name}-chapter-{str(chapter)}-page-{str(page)}.html'
@@ -232,7 +233,7 @@ class RespondToBot(Resource):
                     "\nEND   : " + usr_data["manga-end"])
                 stop_connect = False
                 obj = MangaCrowler(usr_data["manga-name"], usr_data["manga-start"], usr_data["manga-end"], chat_id)
-                manga = threading.Thread(name="MANGA", target=obj.start())
+                manga = threading.Thread(name="MANGA", target=obj.start_crowling())
                 manga.start()
             bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
             USERS.update_one({"user": user}, {"$set": usr_data})
