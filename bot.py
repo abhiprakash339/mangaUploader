@@ -14,7 +14,8 @@ from pymongo import MongoClient
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 from selenium import webdriver
-from webdriver_manager.firefox import GeckoDriverManager
+# from webdriver_manager.firefox import GeckoDriverManager
+from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
@@ -40,9 +41,11 @@ MANGA_COLLECTION = db.get_collection('manga_url_data')
 
 class MangaCrowler():
     def __init__(self, name, start, end, chat_id):
-        fireFoxOptions = webdriver.FirefoxOptions()
-        fireFoxOptions.set_headless()
-        self.driver = webdriver.Firefox(executable_path=GeckoDriverManager().install(), options=fireFoxOptions)
+        # fireFoxOptions = webdriver.FirefoxOptions()
+        chromeOptions = webdriver.ChromeOptions()
+        chromeOptions.set_headless()
+        # self.driver = webdriver.Firefox(executable_path=GeckoDriverManager().install(), options=fireFoxOptions)
+        self.driver = webdriver.Firefox(executable_path=ChromeDriverManager.install(), options=chromeOptions)
         temp = [str(i).capitalize() for i in str(name).split()]
         self.manga_name = "-".join(temp)
         self.manga_start = start

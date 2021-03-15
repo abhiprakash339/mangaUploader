@@ -1,14 +1,10 @@
-import threading
-import time
+from selenium import webdriver
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.common.by import By
 
-
-def pri(thread):
-    while True:
-        print("[ INFO ] Hello ", thread)
-        time.sleep(1)
-
-
-t1 = threading.Thread(target=pri, args=('t1',))
-t1.start()
-t1 = threading.Thread(target=pri, args=('t2',))
-t1.start()
+fireFoxOptions = webdriver.ChromeOptions()
+fireFoxOptions.set_headless()
+driver = webdriver.Chrome(executable_path=ChromeDriverManager().install(), options=fireFoxOptions)
