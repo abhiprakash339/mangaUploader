@@ -4,14 +4,15 @@ import os
 import shutil
 import threading
 import telegram
-from configparser import ConfigParser
-
 import requests
+
+
 from PIL import Image
-from PyPDF2 import PdfFileMerger
-from pymongo import MongoClient
-from requests.adapters import HTTPAdapter
 from selenium import webdriver
+from pymongo import MongoClient
+from PyPDF2 import PdfFileMerger
+from configparser import ConfigParser
+from requests.adapters import HTTPAdapter
 # from webdriver_manager.firefox import GeckoDriverManager
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support.ui import WebDriverWait
