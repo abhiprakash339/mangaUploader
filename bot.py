@@ -45,7 +45,7 @@ class MangaCrowler():
         chromeOptions = webdriver.ChromeOptions()
         chromeOptions.set_headless()
         # self.driver = webdriver.Firefox(executable_path=GeckoDriverManager().install(), options=fireFoxOptions)
-        self.driver = webdriver.Firefox(executable_path=ChromeDriverManager().install(), options=chromeOptions)
+        self.driver = webdriver.Chrome(executable_path=ChromeDriverManager().install(), options=chromeOptions)
         temp = [str(i).capitalize() for i in str(name).split()]
         self.manga_name = "-".join(temp)
         self.manga_start = start
