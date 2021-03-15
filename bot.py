@@ -3,7 +3,6 @@ import json
 import os
 import shutil
 import threading
-import time
 import telegram
 from configparser import ConfigParser
 
@@ -12,13 +11,11 @@ from PIL import Image
 from PyPDF2 import PdfFileMerger
 from pymongo import MongoClient
 from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.retry import Retry
 from selenium import webdriver
 # from webdriver_manager.firefox import GeckoDriverManager
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from flask import Flask, request, send_from_directory
 from flask_restful import Api, Resource
@@ -57,8 +54,6 @@ class MangaCrowler():
         self.manga_crowler(self.manga_name, self.manga_start, self.manga_end, self.chat_id)
 
     def manga_crowler(self, name, start, end, chat_id):
-        # temp = [str(i).capitalize() for i in str(name).split()]
-        # name = "-".join(temp)
         bin_path = f'./bin/{chat_id}/'
         if not os.path.isdir(bin_path):
             os.makedirs(bin_path)
