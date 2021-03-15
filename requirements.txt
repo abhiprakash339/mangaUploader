@@ -1,8 +1,12 @@
 aniso8601==9.0.1
 APScheduler==3.6.3
+beautifulsoup4==4.9.3
 certifi==2020.12.5
 chardet==4.0.0
 click==7.1.2
+colorama==0.4.4
+configparser==5.0.2
+crayons==0.4.0
 dnspython==2.1.0
 Flask==1.1.2
 Flask-RESTful==0.3.8
@@ -17,8 +21,10 @@ PyPDF2==1.26.0
 python-telegram-bot==13.3
 pytz==2021.1
 requests==2.25.1
+selenium==3.141.0
 six==1.15.0
+soupsieve==2.2
 tornado==6.1
 tzlocal==2.1
-urllib3==1.26.3
+webdriver-manager==3.3.0
 Werkzeug==1.0.1
