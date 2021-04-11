@@ -162,7 +162,6 @@ def respond():
     update = telegram.Update.de_json(request.get_json(force=True), bot)
     user = update.message.from_user.name
     update_id = update.update_id
-    print("[ BOT ] Update ID :", update_id)
     chat_id = update.message.chat.id
     msg_id = update.message.message_id
     userText = update.message.text.encode('utf-8').decode()
@@ -170,6 +169,7 @@ def respond():
     print("[INFO] UPDATE ID :", update_id)
     print('[INFO] UpDateId :', UpDateId)
     print("[INFO] CHAT ID :", chat_id)
+    print("[INFO] MESSAGE ID :", msg_id)
     print("[INFO] USER :", user)
     usr_data = USERS.find_one({"user": user})
     usr_state = int(usr_data["Active"])
@@ -177,11 +177,12 @@ def respond():
         bot.sendMessage(chat_id=chat_id, text="You are Not allowed to Use This BOT")
         return 'OK'
     if '/start' in userText:
-        print('[INFO] UpDateId :',UpDateId)
+
         if UpDateId == update_id:
             return 'OK'
         else:
             UpDateId = update_id
+            print('[INFO] After UpDateId :', UpDateId)
         print(type(userText))
         k = str(userText.strip('/start')).strip()
         print(k)
