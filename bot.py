@@ -173,7 +173,7 @@ def respond():
     print("[INFO] USER :", user)
     usr_data = USERS.find_one({"user": user})
     usr_state = int(usr_data["Active"])
-    if '@Itachi_Uchiha_123' is not user:
+    if '@Itachi_Uchiha_123' != user:
         bot.sendMessage(chat_id=chat_id, text="You are Not allowed to Use This BOT")
         return 'OK'
     if '/start' in userText:

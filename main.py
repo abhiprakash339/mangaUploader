@@ -27,6 +27,11 @@ class Home(Resource):
 
 api.add_resource(Home, "/")
 if __name__ == "__main__":
+    user = '@Itachi_Uchiha123'
+    if '@Itachi_Uchiha_123' != user:
+        print('ok')
+    print('kk')
+    exit(0)
     # obj = Test('Abhi')
     # print(obj.get_name())
     # obj.name = 'Luffy'
