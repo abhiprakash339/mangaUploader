@@ -168,10 +168,16 @@ def respond():
     userText = update.message.text.encode('utf-8').decode()
     print("[INFO] got text message :", userText)
     print("[INFO] UPDATE ID :", update_id)
+    print('[INFO] UpDateId :', UpDateId)
+    print("[INFO] CHAT ID :", chat_id)
     print("[INFO] USER :", user)
     usr_data = USERS.find_one({"user": user})
     usr_state = int(usr_data["Active"])
+    if '@Itachi_Uchiha_123' is not user:
+        bot.sendMessage(chat_id=chat_id, text="You are Not allowed to Use This BOT")
+        return 'OK'
     if '/start' in userText:
+        print('[INFO] UpDateId :',UpDateId)
         if UpDateId == update_id:
             return 'OK'
         else:
@@ -190,96 +196,6 @@ def respond():
         return 'OK'
     else:
         return 'OK'
-
-
-# class RespondToBot(Resource):
-#     def post(self):
-#         global stop_connect
-#         # retrieve the message in JSON and then transform it to Telegram object
-#         update = telegram.Update.de_json(request.get_json(force=True), bot)
-#         user = update.message.from_user.name
-#         update_id = update.update_id + 1
-#         print("[ BOT ] Update ID :", update_id)
-#         chat_id = update.message.chat.id
-#         msg_id = update.message.message_id
-#
-#         # Telegram understands UTF-8, so encode text for unicode compatibility
-#         userText = update.message.text.encode('utf-8').decode()
-#         print("[INFO] got text message :", userText)
-#         usr_data = USERS.find_one({"user": user})
-#         usr_state = int(usr_data["Active"])
-#
-#         if userText == "/start":
-#             stop_connect = True
-#             usr_data["Active"] = "1"
-#             usr_data["manga-name"] = ""
-#             usr_data["manga-url"] = ""
-#             usr_data["manga-start"] = ""
-#             usr_data["manga-end"] = ""
-#             response = "Enter Manga Name"
-#             USERS.update_one({"user": user}, {"$set": usr_data})
-#             print("[ BOT ] ", bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id))
-#             gc.collect()
-#             return 'OK'
-#         elif "/help" in userText:
-#             msg = '/start : it will start the pdf upload\n/add {"manga-name":"One-Piece",' \
-#                   '"manga-url":"https://temp.compsci88.com/manga/One-Piece/1007-001.png","manga-chapter":"1007"} '
-#             bot.sendMessage(chat_id=chat_id, text=msg, reply_to_message_id=msg_id,
-#                             disable_web_page_preview=True)
-#             return 'OK'
-#         elif "/add" in userText:
-#             k = userText[5:]
-#             try:
-#                 d = dict(json.loads(k))
-#                 print("[ INFO ] ", d)
-#                 MANGA_COLLECTION.insert_one(d)
-#                 bot.sendMessage(chat_id=chat_id, text="Added", reply_to_message_id=msg_id,
-#                                 disable_web_page_preview=True)
-#             except Exception as excp:
-#                 print("[ INFO ] ", excp.args)
-#                 bot.sendMessage(chat_id=chat_id, text=str(excp.args), reply_to_message_id=msg_id,
-#                                 disable_web_page_preview=True)
-#
-#             gc.collect()
-#             return "OK"
-#         elif "/ongoing" in userText:
-#             temp = ""
-#             for i in MANGA_COLLECTION.find():
-#                 temp += str(i["manga-name"] + " : " + i['manga-url'] + "\n")
-#             bot.sendMessage(chat_id=chat_id, text=temp, reply_to_message_id=msg_id, disable_web_page_preview=True)
-#             gc.collect()
-#             return "OK"
-#
-#         elif "/select" in userText:
-#             k = userText.split()[1]
-#             return "OK"
-#         elif usr_state > 0:
-#             if usr_state == 1:
-#                 usr_data["manga-name"] = userText
-#                 usr_data["Active"] = "2"
-#                 response = "Enter Starting chapter"
-#             elif usr_state == 2:
-#                 usr_data["manga-start"] = userText
-#                 usr_data["Active"] = "3"
-#                 response = "Enter Ending Chapter Name"
-#             elif usr_state == 3:
-#                 usr_data["manga-end"] = userText
-#                 usr_data["Active"] = "0"
-#                 response = str(
-#                     "NAME  : " + usr_data["manga-name"] +
-#                     "\nSTART : " + usr_data["manga-start"] +
-#                     "\nEND   : " + usr_data["manga-end"])
-#                 stop_connect = False
-#                 obj = MangaCrowler(usr_data["manga-name"], usr_data["manga-start"], usr_data["manga-end"], chat_id)
-#                 manga = threading.Thread(name="MANGA", target=obj.start_crowling())
-#                 manga.start()
-#             bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
-#             USERS.update_one({"user": user}, {"$set": usr_data})
-#             return 'OK'
-#         else:
-#             response = "Restart the Bot by Sending '/start' command"
-#             bot.sendMessage(chat_id=chat_id, text=response)
-#             return 'OK'
 
 
 class SetWebhook(Resource):
