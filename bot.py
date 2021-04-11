@@ -55,7 +55,7 @@ class MangaCrowler():
 
     def start_crowling(self):
         self.manga_crowler_thread = threading.Thread(name="MANGA", target=self.manga_crowler, args=(
-        self.manga_name, self.manga_start, self.manga_end, self.chat_id,))
+            self.manga_name, self.manga_start, self.manga_end, self.chat_id,))
         print('[INFO] Thread Created')
         self.manga_crowler_thread.start()
         print('[INFO] Thread STarted')
@@ -92,7 +92,7 @@ class MangaCrowler():
             state, url = self.get_original_url(name, chapter, 1)
             if state == 'ERROR' and stop:
                 bot.edit_message_text(chat_id=chat_id,
-                                      text='ERROR :\n'+url,
+                                      text='ERROR :\n' + url,
                                       message_id=msg.message_id)
                 break
             elif state == 'ERROR' and not stop:
@@ -159,14 +159,15 @@ class MangaCrowler():
             self.driver.get(url)
             if "404 Page Not Found" == self.driver.title:
                 print('[INFO] : Manga Not Found')
-                return 'Error', 'Manga Not Found'
+                return 'ERROR', 'Manga Not Found'
             w = WebDriverWait(self.driver, 8)
             w.until(EC.visibility_of_element_located((By.XPATH, f'//*[@id="TopPage"]/div[{page + 1}]/div/img')))
             return 'OK', self.driver.find_element(By.XPATH,
                                                   f'//*[@id="TopPage"]/div[{page + 1}]/div/img').get_attribute(
                 "ng-src")
         except Exception as excp:
-            return 'Error', excp.args
+            print('[INFO] get original ERROR :', excp.args)
+            return 'ERROR', excp.args
 
 
 @app.route('/{}'.format(TOKEN), methods=['POST'])
