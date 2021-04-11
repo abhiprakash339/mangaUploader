@@ -177,7 +177,6 @@ def respond():
         bot.sendMessage(chat_id=chat_id, text="You are Not allowed to Use This BOT")
         return 'OK'
     if '/start' in userText:
-
         if UpDateId == update_id:
             return 'OK'
         else:
@@ -191,8 +190,11 @@ def respond():
         start = chapter.split('-')[0]
         end = chapter.split('-')[1]
         obj = MangaCrowler(name, start, end, chat_id)
+        print('[INFO] Object Created')
         manga = threading.Thread(name="MANGA", target=obj.start_crowling())
+        print('[INFO] Thread Created')
         manga.start()
+        print('[INFO] Thread STarted')
         print('name:', name, '\nstart :', start, '\nEND :', end)
         return 'OK'
     else:
