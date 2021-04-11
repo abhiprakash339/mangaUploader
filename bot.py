@@ -168,6 +168,7 @@ def respond():
     userText = update.message.text.encode('utf-8').decode()
     print("[INFO] got text message :", userText)
     print("[INFO] UPDATE ID :", update_id)
+    print("[INFO] USER :", user)
     usr_data = USERS.find_one({"user": user})
     usr_state = int(usr_data["Active"])
     if '/start' in userText:
@@ -186,6 +187,8 @@ def respond():
         manga = threading.Thread(name="MANGA", target=obj.start_crowling())
         manga.start()
         print('name:', name, '\nstart :', start, '\nEND :', end)
+        return 'OK'
+    else:
         return 'OK'
 
 
