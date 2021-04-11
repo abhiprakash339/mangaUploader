@@ -1,396 +1,295 @@
-#!/usr/bin/env python
-# pylint: disable=W0613, C0116
-# type: ignore[union-attr]
-# This program is dedicated to the public domain under the CC0 license.
+import gc
+import json
+import os
+import shutil
+import threading
+import telegram
+import requests
 
-"""
-First, a few callback functions are defined. Then, those functions are passed to
-the Dispatcher and registered at their respective places.
-Then, the bot is started and runs until we press Ctrl-C on the command line.
-Usage:
-Example of a bot-user conversation using nested ConversationHandlers.
-Send /start to initiate the conversation.
-Press Ctrl-C on the command line or send a signal to the process to stop the
-bot.
-"""
+from PIL import Image
+from selenium import webdriver
+from pymongo import MongoClient
+from PyPDF2 import PdfFileMerger
+from configparser import ConfigParser
+from requests.adapters import HTTPAdapter
+# from webdriver_manager.firefox import GeckoDriverManager
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+from flask import Flask, request, send_from_directory
+from flask_restful import Api, Resource
 
-import logging
-from configparser import  ConfigParser
-from telegram import InlineKeyboardMarkup, InlineKeyboardButton, Update
-from telegram.ext import (
-    Updater,
-    CommandHandler,
-    MessageHandler,
-    Filters,
-    ConversationHandler,
-    CallbackQueryHandler,
-    CallbackContext,
-)
+app = Flask(__name__)
+api = Api(app)
 
 config = ConfigParser()
 config.read('bot.ini')
 
 TOKEN = config['BOT']['TOKEN']
 URL = config['SERVER']['URL']
+bot = telegram.Bot(token=TOKEN)
 
-# Enable logging
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
-)
-
-logger = logging.getLogger(__name__)
-
-# State definitions for top level conversation
-SELECTING_ACTION, ADDING_MEMBER, ADDING_SELF, DESCRIBING_SELF = map(chr, range(4))
-# State definitions for second level conversation
-SELECTING_LEVEL, SELECTING_GENDER = map(chr, range(4, 6))
-# State definitions for descriptions conversation
-SELECTING_FEATURE, TYPING = map(chr, range(6, 8))
-# Meta states
-STOPPING, SHOWING = map(chr, range(8, 10))
-# Shortcut for ConversationHandler.END
-END = ConversationHandler.END
-
-# Different constants for this example
-(
-    PARENTS,
-    CHILDREN,
-    SELF,
-    GENDER,
-    MALE,
-    FEMALE,
-    AGE,
-    NAME,
-    START_OVER,
-    FEATURES,
-    CURRENT_FEATURE,
-    CURRENT_LEVEL,
-) = map(chr, range(10, 22))
+client = MongoClient(config["API"]["MONGO-DB"])
+db = client.get_database("Telegram_Bot")
+USERS = db.get_collection('users_inputs')
+MANGA_COLLECTION = db.get_collection('manga_url_data')
 
 
-# Helper
-def _name_switcher(level):
-    if level == PARENTS:
-        return 'Father', 'Mother'
-    return 'Brother', 'Sister'
+class MangaCrowler():
+    def __init__(self, name, start, end, chat_id):
+        # fireFoxOptions = webdriver.FirefoxOptions()
+        chromeOptions = webdriver.ChromeOptions()
+        chromeOptions.set_headless()
+        # self.driver = webdriver.Firefox(executable_path=GeckoDriverManager().install(), options=fireFoxOptions)
+        self.driver = webdriver.Chrome(executable_path=ChromeDriverManager().install(), options=chromeOptions)
+        temp = [str(i).capitalize() for i in str(name).split()]
+        self.manga_name = "-".join(temp)
+        self.manga_start = start
+        self.manga_end = end
+        self.chat_id = chat_id
+        self.session = requests.Session()
 
+    def start_crowling(self):
+        self.manga_crowler(self.manga_name, self.manga_start, self.manga_end, self.chat_id)
 
-# Top level conversation callbacks
-def start(update: Update, context: CallbackContext) -> None:
-    """Select an action: Adding parent/child or show data."""
-    text = (
-        'You may add a familiy member, yourself show the gathered data or end the '
-        'conversation. To abort, simply type /stop.'
-    )
-    buttons = [
-        [
-            InlineKeyboardButton(text='Add family member', callback_data=str(ADDING_MEMBER)),
-            InlineKeyboardButton(text='Add yourself', callback_data=str(ADDING_SELF)),
-        ],
-        [
-            InlineKeyboardButton(text='Show data', callback_data=str(SHOWING)),
-            InlineKeyboardButton(text='Done', callback_data=str(END)),
-        ],
-    ]
-    keyboard = InlineKeyboardMarkup(buttons)
-
-    # If we're starting over we don't need do send a new message
-    if context.user_data.get(START_OVER):
-        update.callback_query.answer()
-        update.callback_query.edit_message_text(text=text, reply_markup=keyboard)
-    else:
-        update.message.reply_text(
-            'Hi, I\'m FamiliyBot and here to help you gather information' 'about your family.'
-        )
-        update.message.reply_text(text=text, reply_markup=keyboard)
-
-    context.user_data[START_OVER] = False
-    return SELECTING_ACTION
-
-
-def adding_self(update: Update, context: CallbackContext) -> None:
-    """Add information about youself."""
-    context.user_data[CURRENT_LEVEL] = SELF
-    text = 'Okay, please tell me about yourself.'
-    button = InlineKeyboardButton(text='Add info', callback_data=str(MALE))
-    keyboard = InlineKeyboardMarkup.from_button(button)
-
-    update.callback_query.answer()
-    update.callback_query.edit_message_text(text=text, reply_markup=keyboard)
-
-    return DESCRIBING_SELF
-
-
-def show_data(update: Update, context: CallbackContext) -> None:
-    """Pretty print gathered data."""
-
-    def prettyprint(user_data, level):
-        people = user_data.get(level)
-        if not people:
-            return '\nNo information yet.'
-
-        text = ''
-        if level == SELF:
-            for person in user_data[level]:
-                text += f"\nName: {person.get(NAME, '-')}, Age: {person.get(AGE, '-')}"
+    def manga_crowler(self, name, start, end, chat_id):
+        bin_path = f'./bin/{chat_id}/'
+        if not os.path.isdir(bin_path):
+            os.makedirs(bin_path)
         else:
-            male, female = _name_switcher(level)
+            shutil.rmtree(bin_path)
+            os.makedirs(bin_path)
+        temp = float(start)
+        end = float(end)
 
-            for person in user_data[level]:
-                gender = female if person[GENDER] == FEMALE else male
-                text += f"\n{gender}: Name: {person.get(NAME, '-')}, Age: {person.get(AGE, '-')}"
-        return text
+        temp2 = f"{bin_path}/temp2.pdf"
+        temp3 = f"{bin_path}/temp3.pdf"
+        msg = bot.sendMessage(chat_id=chat_id, text=f"{name}\n--------------------------")
+        while temp <= end:
+            ch = round(temp, 1)
+            if ch.is_integer():
+                chapter = str(int(ch))
+                stop = True
+            else:
+                chapter = str(ch)
+                stop = False
+            print("[ INFO ] :", chapter)
+            bot.edit_message_text(chat_id=chat_id,
+                                  text=f"{name}\n--------------------------\nChapter :{str(chapter).zfill(3)}",
+                                  message_id=msg.message_id)
+            pdf_filename = str(bin_path + name + " Chapter " + str(chapter).zfill(3) + ".pdf")
+            url = self.get_original_url(name, chapter, 1)
+            temp = round(temp, 10) + round(0.1, 10)
+            print("[ INFO ] Original URL :", url)
+            if url is None and stop:
+                break
+            elif url is None and not stop:
+                continue
+            main_url = url[:-7]
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:66.0) Gecko/20100101 Firefox/66.0",
+                "Accept-Encoding": "*",
+                "Connection": "keep-alive"
+            }
+            page = 1
+            while True:
+                bot.edit_message_text(chat_id=chat_id,
+                                      text=f"{name}\n=====Downloading=====\nChapter :{str(chapter).zfill(3)}\nPAGE : {page}",
+                                      message_id=msg.message_id)
+                merger = PdfFileMerger()
+                url = f'{main_url}{str(page).zfill(3)}.png'
+                self.session.mount(url, HTTPAdapter(max_retries=5))
+                # code = requests.get(url, headers=headers, stream=True)
+                img_data = self.session.get(url, headers=headers, stream=True)
+                if img_data.status_code == 200:
+                    image = Image.open(img_data.raw)
+                    image.load()
+                    image.split()
+                    if page == 1:
+                        image.save(pdf_filename, "PDF", resolution=100.0, save_all=True)
+                    else:
+                        image.save(temp2, "PDF", resolution=100.0, save_all=True)
+                        merger.append(pdf_filename)
+                        merger.append(temp2)
+                        merger.write(temp3)
+                        merger.close()
+                        os.remove(pdf_filename)
+                        os.rename(temp3, pdf_filename)
+                        os.remove(temp2)
+                else:
+                    break
+                print(url)
+                page += 1
+                gc.collect()
 
-    user_data = context.user_data
-    text = 'Yourself:' + prettyprint(user_data, SELF)
-    text += '\n\nParents:' + prettyprint(user_data, PARENTS)
-    text += '\n\nChildren:' + prettyprint(user_data, CHILDREN)
+            with open(pdf_filename, 'rb') as file:
+                bot.edit_message_text(chat_id=chat_id,
+                                      text=f"{name}\n=====Uploading=====\n\nChapter :{str(chapter).zfill(3)}",
+                                      message_id=msg.message_id)
+                print("[ BOT ] ", bot.sendDocument(document=file, chat_id=chat_id, ))
 
-    buttons = [[InlineKeyboardButton(text='Back', callback_data=str(END))]]
-    keyboard = InlineKeyboardMarkup(buttons)
+                bot.edit_message_text(chat_id=chat_id, text="Uploading PDF Completed", message_id=msg.message_id)
 
-    update.callback_query.answer()
-    update.callback_query.edit_message_text(text=text, reply_markup=keyboard)
-    user_data[START_OVER] = True
+            print("[ INFO ] ", pdf_filename, " Uploaded")
+            os.remove(pdf_filename)
+            bot.delete_message(chat_id=chat_id, message_id=msg.message_id)
+            gc.collect()
+        shutil.rmtree(bin_path)
+        self.driver.close()
+        return
 
-    return SHOWING
-
-
-def stop(update: Update, context: CallbackContext) -> None:
-    """End Conversation by command."""
-    update.message.reply_text('Okay, bye.')
-
-    return END
-
-
-def end(update: Update, context: CallbackContext) -> None:
-    """End conversation from InlineKeyboardButton."""
-    update.callback_query.answer()
-
-    text = 'See you around!'
-    update.callback_query.edit_message_text(text=text)
-
-    return END
-
-
-# Second level conversation callbacks
-def select_level(update: Update, context: CallbackContext) -> None:
-    """Choose to add a parent or a child."""
-    text = 'You may add a parent or a child. Also you can show the gathered data or go back.'
-    buttons = [
-        [
-            InlineKeyboardButton(text='Add parent', callback_data=str(PARENTS)),
-            InlineKeyboardButton(text='Add child', callback_data=str(CHILDREN)),
-        ],
-        [
-            InlineKeyboardButton(text='Show data', callback_data=str(SHOWING)),
-            InlineKeyboardButton(text='Back', callback_data=str(END)),
-        ],
-    ]
-    keyboard = InlineKeyboardMarkup(buttons)
-
-    update.callback_query.answer()
-    update.callback_query.edit_message_text(text=text, reply_markup=keyboard)
-
-    return SELECTING_LEVEL
-
-
-def select_gender(update: Update, context: CallbackContext) -> None:
-    """Choose to add mother or father."""
-    level = update.callback_query.data
-    context.user_data[CURRENT_LEVEL] = level
-
-    text = 'Please choose, whom to add.'
-
-    male, female = _name_switcher(level)
-
-    buttons = [
-        [
-            InlineKeyboardButton(text='Add ' + male, callback_data=str(MALE)),
-            InlineKeyboardButton(text='Add ' + female, callback_data=str(FEMALE)),
-        ],
-        [
-            InlineKeyboardButton(text='Show data', callback_data=str(SHOWING)),
-            InlineKeyboardButton(text='Back', callback_data=str(END)),
-        ],
-    ]
-    keyboard = InlineKeyboardMarkup(buttons)
-
-    update.callback_query.answer()
-    update.callback_query.edit_message_text(text=text, reply_markup=keyboard)
-
-    return SELECTING_GENDER
-
-
-def end_second_level(update: Update, context: CallbackContext) -> None:
-    """Return to top level conversation."""
-    context.user_data[START_OVER] = True
-    start(update, context)
-
-    return END
-
-
-# Third level callbacks
-def select_feature(update: Update, context: CallbackContext) -> None:
-    """Select a feature to update for the person."""
-    buttons = [
-        [
-            InlineKeyboardButton(text='Name', callback_data=str(NAME)),
-            InlineKeyboardButton(text='Age', callback_data=str(AGE)),
-            InlineKeyboardButton(text='Done', callback_data=str(END)),
-        ]
-    ]
-    keyboard = InlineKeyboardMarkup(buttons)
-
-    # If we collect features for a new person, clear the cache and save the gender
-    if not context.user_data.get(START_OVER):
-        context.user_data[FEATURES] = {GENDER: update.callback_query.data}
-        text = 'Please select a feature to update.'
-
-        update.callback_query.answer()
-        update.callback_query.edit_message_text(text=text, reply_markup=keyboard)
-    # But after we do that, we need to send a new message
-    else:
-        text = 'Got it! Please select a feature to update.'
-        update.message.reply_text(text=text, reply_markup=keyboard)
-
-    context.user_data[START_OVER] = False
-    return SELECTING_FEATURE
+    def get_original_url(self, name, chapter, page):
+        url = f'https://manga4life.com/read-online/{name}-chapter-{str(chapter)}-page-{str(page)}.html'
+        print(url)
+        try:
+            self.driver.get(url)
+            if "404 Page Not Found" == self.driver.title:
+                return None
+            w = WebDriverWait(self.driver, 8)
+            w.until(EC.visibility_of_element_located((By.XPATH, f'//*[@id="TopPage"]/div[{page + 1}]/div/img')))
+            return self.driver.find_element(By.XPATH, f'//*[@id="TopPage"]/div[{page + 1}]/div/img').get_attribute(
+                "ng-src")
+        except:
+            return None
 
 
-def ask_for_input(update: Update, context: CallbackContext) -> None:
-    """Prompt user to input data for selected feature."""
-    context.user_data[CURRENT_FEATURE] = update.callback_query.data
-    text = 'Okay, tell me.'
-
-    update.callback_query.answer()
-    update.callback_query.edit_message_text(text=text)
-
-    return TYPING
-
-
-def save_input(update: Update, context: CallbackContext) -> None:
-    """Save input for feature and return to feature selection."""
-    user_data = context.user_data
-    user_data[FEATURES][user_data[CURRENT_FEATURE]] = update.message.text
-
-    user_data[START_OVER] = True
-
-    return select_feature(update, context)
-
-
-def end_describing(update: Update, context: CallbackContext) -> None:
-    """End gathering of features and return to parent conversation."""
-    user_data = context.user_data
-    level = user_data[CURRENT_LEVEL]
-    if not user_data.get(level):
-        user_data[level] = []
-    user_data[level].append(user_data[FEATURES])
-
-    # Print upper level menu
-    if level == SELF:
-        user_data[START_OVER] = True
-        start(update, context)
-    else:
-        select_level(update, context)
-
-    return END
+@app.route('/{}'.format(TOKEN), methods=['POST'])
+def respond():
+    update = telegram.Update.de_json(request.get_json(force=True), bot)
+    user = update.message.from_user.name
+    update_id = update.update_id + 1
+    print("[ BOT ] Update ID :", update_id)
+    chat_id = update.message.chat.id
+    msg_id = update.message.message_id
+    userText = update.message.text.encode('utf-8').decode()
+    print("[INFO] got text message :", userText)
+    usr_data = USERS.find_one({"user": user})
+    usr_state = int(usr_data["Active"])
+    if '/start' in userText:
+        k = str(userText.removeprefix('/start')).strip()
+        name = ' '.join(k.split()[0:-1])
+        chapter = k.split()[-1]
+        start = chapter.split('-')[0]
+        end = chapter.split('-')[1]
+        obj = MangaCrowler(name, start, end, chat_id)
+        manga = threading.Thread(name="MANGA", target=obj.start_crowling())
+        manga.start()
+        print('name:', name, '\nstart :', start, '\nEND :', end)
 
 
-def stop_nested(update: Update, context: CallbackContext) -> None:
-    """Completely end conversation from within nested conversation."""
-    update.message.reply_text('Okay, bye.')
-
-    return STOPPING
-
-
-def main():
-    # Create the Updater and pass it your bot's token.
-    updater = Updater(TOKEN)
-
-    # Get the dispatcher to register handlers
-    dispatcher = updater.dispatcher
-
-    # Set up third level ConversationHandler (collecting features)
-    description_conv = ConversationHandler(
-        entry_points=[
-            CallbackQueryHandler(
-                select_feature, pattern='^' + str(MALE) + '$|^' + str(FEMALE) + '$'
-            )
-        ],
-        states={
-            SELECTING_FEATURE: [
-                CallbackQueryHandler(ask_for_input, pattern='^(?!' + str(END) + ').*$')
-            ],
-            TYPING: [MessageHandler(Filters.text & ~Filters.command, save_input)],
-        },
-        fallbacks=[
-            CallbackQueryHandler(end_describing, pattern='^' + str(END) + '$'),
-            CommandHandler('stop', stop_nested),
-        ],
-        map_to_parent={
-            # Return to second level menu
-            END: SELECTING_LEVEL,
-            # End conversation alltogether
-            STOPPING: STOPPING,
-        },
-    )
-
-    # Set up second level ConversationHandler (adding a person)
-    add_member_conv = ConversationHandler(
-        entry_points=[CallbackQueryHandler(select_level, pattern='^' + str(ADDING_MEMBER) + '$')],
-        states={
-            SELECTING_LEVEL: [
-                CallbackQueryHandler(select_gender, pattern=f'^{PARENTS}$|^{CHILDREN}$')
-            ],
-            SELECTING_GENDER: [description_conv],
-        },
-        fallbacks=[
-            CallbackQueryHandler(show_data, pattern='^' + str(SHOWING) + '$'),
-            CallbackQueryHandler(end_second_level, pattern='^' + str(END) + '$'),
-            CommandHandler('stop', stop_nested),
-        ],
-        map_to_parent={
-            # After showing data return to top level menu
-            SHOWING: SHOWING,
-            # Return to top level menu
-            END: SELECTING_ACTION,
-            # End conversation alltogether
-            STOPPING: END,
-        },
-    )
-
-    # Set up top level ConversationHandler (selecting action)
-    # Because the states of the third level conversation map to the ones of the econd level
-    # conversation, we need to make sure the top level conversation can also handle them
-    selection_handlers = [
-        add_member_conv,
-        CallbackQueryHandler(show_data, pattern='^' + str(SHOWING) + '$'),
-        CallbackQueryHandler(adding_self, pattern='^' + str(ADDING_SELF) + '$'),
-        CallbackQueryHandler(end, pattern='^' + str(END) + '$'),
-    ]
-    conv_handler = ConversationHandler(
-        entry_points=[CommandHandler('start', start)],
-        states={
-            SHOWING: [CallbackQueryHandler(start, pattern='^' + str(END) + '$')],
-            SELECTING_ACTION: selection_handlers,
-            SELECTING_LEVEL: selection_handlers,
-            DESCRIBING_SELF: [description_conv],
-            STOPPING: [CommandHandler('start', start)],
-        },
-        fallbacks=[CommandHandler('stop', stop)],
-    )
-
-    dispatcher.add_handler(conv_handler)
-
-    # Start the Bot
-    updater.start_polling()
-
-    # Run the bot until you press Ctrl-C or the process receives SIGINT,
-    # SIGTERM or SIGABRT. This should be used most of the time, since
-    # start_polling() is non-blocking and will stop the bot gracefully.
-    updater.idle()
+# class RespondToBot(Resource):
+#     def post(self):
+#         global stop_connect
+#         # retrieve the message in JSON and then transform it to Telegram object
+#         update = telegram.Update.de_json(request.get_json(force=True), bot)
+#         user = update.message.from_user.name
+#         update_id = update.update_id + 1
+#         print("[ BOT ] Update ID :", update_id)
+#         chat_id = update.message.chat.id
+#         msg_id = update.message.message_id
+#
+#         # Telegram understands UTF-8, so encode text for unicode compatibility
+#         userText = update.message.text.encode('utf-8').decode()
+#         print("[INFO] got text message :", userText)
+#         usr_data = USERS.find_one({"user": user})
+#         usr_state = int(usr_data["Active"])
+#
+#         if userText == "/start":
+#             stop_connect = True
+#             usr_data["Active"] = "1"
+#             usr_data["manga-name"] = ""
+#             usr_data["manga-url"] = ""
+#             usr_data["manga-start"] = ""
+#             usr_data["manga-end"] = ""
+#             response = "Enter Manga Name"
+#             USERS.update_one({"user": user}, {"$set": usr_data})
+#             print("[ BOT ] ", bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id))
+#             gc.collect()
+#             return 'OK'
+#         elif "/help" in userText:
+#             msg = '/start : it will start the pdf upload\n/add {"manga-name":"One-Piece",' \
+#                   '"manga-url":"https://temp.compsci88.com/manga/One-Piece/1007-001.png","manga-chapter":"1007"} '
+#             bot.sendMessage(chat_id=chat_id, text=msg, reply_to_message_id=msg_id,
+#                             disable_web_page_preview=True)
+#             return 'OK'
+#         elif "/add" in userText:
+#             k = userText[5:]
+#             try:
+#                 d = dict(json.loads(k))
+#                 print("[ INFO ] ", d)
+#                 MANGA_COLLECTION.insert_one(d)
+#                 bot.sendMessage(chat_id=chat_id, text="Added", reply_to_message_id=msg_id,
+#                                 disable_web_page_preview=True)
+#             except Exception as excp:
+#                 print("[ INFO ] ", excp.args)
+#                 bot.sendMessage(chat_id=chat_id, text=str(excp.args), reply_to_message_id=msg_id,
+#                                 disable_web_page_preview=True)
+#
+#             gc.collect()
+#             return "OK"
+#         elif "/ongoing" in userText:
+#             temp = ""
+#             for i in MANGA_COLLECTION.find():
+#                 temp += str(i["manga-name"] + " : " + i['manga-url'] + "\n")
+#             bot.sendMessage(chat_id=chat_id, text=temp, reply_to_message_id=msg_id, disable_web_page_preview=True)
+#             gc.collect()
+#             return "OK"
+#
+#         elif "/select" in userText:
+#             k = userText.split()[1]
+#             return "OK"
+#         elif usr_state > 0:
+#             if usr_state == 1:
+#                 usr_data["manga-name"] = userText
+#                 usr_data["Active"] = "2"
+#                 response = "Enter Starting chapter"
+#             elif usr_state == 2:
+#                 usr_data["manga-start"] = userText
+#                 usr_data["Active"] = "3"
+#                 response = "Enter Ending Chapter Name"
+#             elif usr_state == 3:
+#                 usr_data["manga-end"] = userText
+#                 usr_data["Active"] = "0"
+#                 response = str(
+#                     "NAME  : " + usr_data["manga-name"] +
+#                     "\nSTART : " + usr_data["manga-start"] +
+#                     "\nEND   : " + usr_data["manga-end"])
+#                 stop_connect = False
+#                 obj = MangaCrowler(usr_data["manga-name"], usr_data["manga-start"], usr_data["manga-end"], chat_id)
+#                 manga = threading.Thread(name="MANGA", target=obj.start_crowling())
+#                 manga.start()
+#             bot.sendMessage(chat_id=chat_id, text=response, reply_to_message_id=msg_id)
+#             USERS.update_one({"user": user}, {"$set": usr_data})
+#             return 'OK'
+#         else:
+#             response = "Restart the Bot by Sending '/start' command"
+#             bot.sendMessage(chat_id=chat_id, text=response)
+#             return 'OK'
 
 
+class SetWebhook(Resource):
+    def get(self):
+        s = bot.setWebhook('{URL}{HOOK}'.format(URL=URL, HOOK=TOKEN))
+        if s:
+            return "WEBHOOK SETUP SUCCESSFUL"
+        else:
+            return "WEBHOOK SETUP FAILED"
+
+
+class Favicon(Resource):
+    def get(self):
+        return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico',
+                                   mimetype='image/vnd.microsoft.icon')
+
+
+class Index(Resource):
+    def get(self):
+        return 'WELCOME TO MANGA-UPLOADER'
+
+
+api.add_resource(Index, "/")
+api.add_resource(Favicon, '/favicon.ico')
+api.add_resource(SetWebhook, '/setwebhook')
 if __name__ == '__main__':
-    main()
+    app.run(threaded=True)
