@@ -1,10 +1,27 @@
-from selenium import webdriver
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
-from selenium.webdriver.common.by import By
+from flask import Flask, request, send_from_directory
+from flask_restful import Api, Resource
+from dataclasses import dataclass
+from functools import cache
 
-fireFoxOptions = webdriver.ChromeOptions()
-fireFoxOptions.set_headless()
-driver = webdriver.Chrome(executable_path=ChromeDriverManager().install(), options=fireFoxOptions)
+app = Flask(__name__)
+api = Api(app)
+
+
+# @cache
+@dataclass(frozen=True, order=True)
+class Home(Resource):
+    def get(self):
+        return 'WELCOME TO MANGA-UPLOADER'
+
+
+api.add_resource(Home, "/")
+if __name__ == "__main__":
+    a = '/start One Piece 450-450'
+    if '/start' in a:
+        k = str(a.removeprefix('/start')).strip()
+        name = ' '.join(k.split()[0:-1])
+        chapter = k.split()[-1]
+        start = chapter.split('-')[0]
+        end = chapter.split('-')[1]
+        print('name:', name, '\nstart :', start, '\nEND :', end)
+    # app.run(port=3000, debug=True)

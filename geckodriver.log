@@ -889,7 +889,8 @@ console.warn: SearchSettings: "get: No settings file exists, new profile?" (new 
 1615836594281	Marionette	INFO	Listening on port 50506
 1615836594749	Marionette	WARN	TLS certificate errors will be ignored for this session
 console.log: WebExtensions: reset-default-search: No addons in our list are installed.
-ner	INFO	Running command: "C:\\Program Files\\Mozilla Firefox\\firefox.exe" "--marionette" "-headless" "-foreground" "-no-remote" "-profile" "C:\\Users\\Abhi\\AppData\\Local\\Temp\\rust_mozprofilegOidsp"
+Exiting due to channel error.
+Program Files\\Mozilla Firefox\\firefox.exe" "--marionette" "-headless" "-foreground" "-no-remote" "-profile" "C:\\Users\\Abhi\\AppData\\Local\\Temp\\rust_mozprofilegOidsp"
 *** You are running in headless mode.
 JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
 console.warn: SearchSettings: "get: No settings file exists, new profile?" (new Error("", "(unknown module)"))
@@ -903,14 +904,19 @@ console.warn: SearchSettings: "get: No settings file exists, new profile?" (new 
 1615836808956	Marionette	INFO	Listening on port 50758
 1615836809462	Marionette	WARN	TLS certificate errors will be ignored for this session
 console.log: WebExtensions: reset-default-search: No addons in our list are installed.
-ner	INFO	Running command: "C:\\Program Files\\Mozilla Firefox\\firefox.exe" "--marionette" "-headless" "-foreground" "-no-remote" "-profile" "C:\\Users\\Abhi\\AppData\\Local\\Temp\\rust_mozprofileaUISv5"
+Exiting due to channel error.
+Exiting due to channel error.
+\firefox.exe" "--marionette" "-headless" "-foreground" "-no-remote" "-profile" "C:\\Users\\Abhi\\AppData\\Local\\Temp\\rust_mozprofileaUISv5"
 *** You are running in headless mode.
 JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
 console.warn: SearchSettings: "get: No settings file exists, new profile?" (new Error("", "(unknown module)"))
 1615837167823	Marionette	INFO	Listening on port 50921
 1615837168162	Marionette	WARN	TLS certificate errors will be ignored for this session
 console.log: WebExtensions: reset-default-search: No addons in our list are installed.
-ner	INFO	Running command: "C:\\Program Files\\Mozilla Firefox\\firefox.exe" "--marionette" "-headless" "-foreground" "-no-remote" "-profile" "C:\\Users\\Abhi\\AppData\\Local\\Temp\\rust_mozprofileQZbrOf"
+Exiting due to channel error.
+Exiting due to channel error.
+Exiting due to channel error.
+headless" "-foreground" "-no-remote" "-profile" "C:\\Users\\Abhi\\AppData\\Local\\Temp\\rust_mozprofileQZbrOf"
 *** You are running in headless mode.
 JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
 console.warn: SearchSettings: "get: No settings file exists, new profile?" (new Error("", "(unknown module)"))
@@ -946,15 +952,20 @@ console.warn: SearchSettings: "get: No settings file exists, new profile?" (new 
 1615837895555	Marionette	INFO	Listening on port 51440
 1615837896348	Marionette	WARN	TLS certificate errors will be ignored for this session
 console.log: WebExtensions: reset-default-search: No addons in our list are installed.
-ner	INFO	Running command: "C:\\Program Files\\Mozilla Firefox\\firefox.exe" "--marionette" "-headless" "-foreground" "-no-remote" "-profile" "C:\\Users\\Abhi\\AppData\\Local\\Temp\\rust_mozprofilepmusOW"
+Exiting due to channel error.
+Exiting due to channel error.
+ng due to channel error.
+Exiting due to channel error.
+no-remote" "-profile" "C:\\Users\\Abhi\\AppData\\Local\\Temp\\rust_mozprofilepmusOW"
 *** You are running in headless mode.
 JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
 console.warn: SearchSettings: "get: No settings file exists, new profile?" (new Error("", "(unknown module)"))
 1615837926946	Marionette	INFO	Listening on port 51524
 1615837927253	Marionette	WARN	TLS certificate errors will be ignored for this session
 console.log: WebExtensions: reset-default-search: No addons in our list are installed.
-1615838557540	geckodriver	INFO	Listening on 127.0.0.1:51669
-1615838560631	mozrunner::runner	INFO	Running command: "C:\\Program Files\\Mozilla Firefox\\firefox.exe" "--marionette" "-headless" "-foreground" "-no-remote" "-profile" "C:\\Users\\Abhi\\AppData\\Local\\Temp\\rust_mozprofileAeriyH"
+Exiting due to channel error.
+Exiting due to channel error.
+15838560631	mozrunner::runner	INFO	Running command: "C:\\Program Files\\Mozilla Firefox\\firefox.exe" "--marionette" "-headless" "-foreground" "-no-remote" "-profile" "C:\\Users\\Abhi\\AppData\\Local\\Temp\\rust_mozprofileAeriyH"
 *** You are running in headless mode.
 JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
 console.warn: SearchSettings: "get: No settings file exists, new profile?" (new Error("", "(unknown module)"))
