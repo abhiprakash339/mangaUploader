@@ -167,6 +167,7 @@ def respond():
     usr_data = USERS.find_one({"user": user})
     usr_state = int(usr_data["Active"])
     if '/start' in userText:
+        print(type(userText))
         k = str(userText.removeprefix('/start')).strip()
         name = ' '.join(k.split()[0:-1])
         chapter = k.split()[-1]
