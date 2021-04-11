@@ -1,3 +1,7 @@
+import os
+import threading
+import time
+import signal
 from flask import Flask, request, send_from_directory
 from flask_restful import Api, Resource
 from dataclasses import dataclass
@@ -6,6 +10,10 @@ from functools import cache
 app = Flask(__name__)
 api = Api(app)
 
+def t():
+    for i in range(10):
+        time.sleep(1)
+        print(i)
 
 # @cache
 @dataclass(order=True)
@@ -27,6 +35,11 @@ class Home(Resource):
 
 api.add_resource(Home, "/")
 if __name__ == "__main__":
+    t = threading.Thread(name="MANGA", target=t)
+    t.start()
+    print(t.native_id)
+    os.kill(t.native_id,signal.SIGBREAK)
+    exit(0)
     user = '@Itachi_Uchiha123'
     if '@Itachi_Uchiha_123' != user:
         print('ok')

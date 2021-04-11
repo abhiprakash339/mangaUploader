@@ -51,9 +51,16 @@ class MangaCrowler():
         self.manga_end = end
         self.chat_id = chat_id
         self.session = requests.Session()
+        self.manga_crowler_thread = None
 
     def start_crowling(self):
-        self.manga_crowler(self.manga_name, self.manga_start, self.manga_end, self.chat_id)
+        self.manga_crowler_thread = threading.Thread(name="MANGA", target=self.manga_crowler,args=(self.manga_name, self.manga_start, self.manga_end, self.chat_id,))
+        print('[INFO] Thread Created')
+        self.manga_crowler_thread.start()
+        print('[INFO] Thread STarted')
+
+    def stop_crowling(self):
+        pass
 
     def manga_crowler(self, name, start, end, chat_id):
         bin_path = f'./bin/{chat_id}/'
@@ -190,11 +197,9 @@ def respond():
         start = chapter.split('-')[0]
         end = chapter.split('-')[1]
         obj = MangaCrowler(name, start, end, chat_id)
+        obj.start_crowling()
         print('[INFO] Object Created')
-        manga = threading.Thread(name="MANGA", target=obj.start_crowling())
-        print('[INFO] Thread Created')
-        manga.start()
-        print('[INFO] Thread STarted')
+
         print('name:', name, '\nstart :', start, '\nEND :', end)
         return 'OK'
     else:
