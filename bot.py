@@ -54,7 +54,8 @@ class MangaCrowler():
         self.manga_crowler_thread = None
 
     def start_crowling(self):
-        self.manga_crowler_thread = threading.Thread(name="MANGA", target=self.manga_crowler,args=(self.manga_name, self.manga_start, self.manga_end, self.chat_id,))
+        self.manga_crowler_thread = threading.Thread(name="MANGA", target=self.manga_crowler, args=(
+        self.manga_name, self.manga_start, self.manga_end, self.chat_id,))
         print('[INFO] Thread Created')
         self.manga_crowler_thread.start()
         print('[INFO] Thread STarted')
@@ -88,13 +89,16 @@ class MangaCrowler():
                                   text=f"{name}\n--------------------------\nChapter :{str(chapter).zfill(3)}",
                                   message_id=msg.message_id)
             pdf_filename = str(bin_path + name + " Chapter " + str(chapter).zfill(3) + ".pdf")
-            url = self.get_original_url(name, chapter, 1)
+            state, url = self.get_original_url(name, chapter, 1)
+            if state == 'ERROR' and stop:
+                bot.edit_message_text(chat_id=chat_id,
+                                      text='ERROR :\n'+url,
+                                      message_id=msg.message_id)
+                break
+            elif state == 'ERROR' and not stop:
+                continue
             temp = round(temp, 10) + round(0.1, 10)
             print("[ INFO ] Original URL :", url)
-            if url is None and stop:
-                break
-            elif url is None and not stop:
-                continue
             main_url = url[:-7]
             headers = {
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:66.0) Gecko/20100101 Firefox/66.0",
@@ -154,13 +158,15 @@ class MangaCrowler():
         try:
             self.driver.get(url)
             if "404 Page Not Found" == self.driver.title:
-                return None
+                print('[INFO] : Manga Not Found')
+                return 'Error', 'Manga Not Found'
             w = WebDriverWait(self.driver, 8)
             w.until(EC.visibility_of_element_located((By.XPATH, f'//*[@id="TopPage"]/div[{page + 1}]/div/img')))
-            return self.driver.find_element(By.XPATH, f'//*[@id="TopPage"]/div[{page + 1}]/div/img').get_attribute(
+            return 'OK', self.driver.find_element(By.XPATH,
+                                                  f'//*[@id="TopPage"]/div[{page + 1}]/div/img').get_attribute(
                 "ng-src")
-        except:
-            return None
+        except Exception as excp:
+            return 'Error', excp.args
 
 
 @app.route('/{}'.format(TOKEN), methods=['POST'])
