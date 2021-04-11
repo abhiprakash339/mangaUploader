@@ -35,8 +35,9 @@ if __name__ == "__main__":
     a = '/start naruto 199-199'
     print(type(a))
     if '/start' in a:
-        k = str(a.removeprefix('/start')).strip()
-        print(k)
+        print(str(a.strip('/start')).strip())
+        # k = str(a.removeprefix('/start')).strip()
+        # print(k)
     #     name = ' '.join(k.split()[0:-1])
     #     chapter = k.split()[-1]
     #     start = chapter.split('-')[0]
