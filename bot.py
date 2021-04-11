@@ -35,6 +35,8 @@ db = client.get_database("Telegram_Bot")
 USERS = db.get_collection('users_inputs')
 MANGA_COLLECTION = db.get_collection('manga_url_data')
 
+UpDateId = None
+
 
 class MangaCrowler():
     def __init__(self, name, start, end, chat_id):
@@ -156,17 +158,23 @@ class MangaCrowler():
 
 @app.route('/{}'.format(TOKEN), methods=['POST'])
 def respond():
+    global UpDateId
     update = telegram.Update.de_json(request.get_json(force=True), bot)
     user = update.message.from_user.name
-    update_id = update.update_id + 1
+    update_id = update.update_id
     print("[ BOT ] Update ID :", update_id)
     chat_id = update.message.chat.id
     msg_id = update.message.message_id
     userText = update.message.text.encode('utf-8').decode()
     print("[INFO] got text message :", userText)
+    print("[INFO] UPDATE ID :", update_id)
     usr_data = USERS.find_one({"user": user})
     usr_state = int(usr_data["Active"])
     if '/start' in userText:
+        if UpDateId == update_id:
+            return 'OK'
+        else:
+            UpDateId = update_id
         print(type(userText))
         k = str(userText.strip('/start')).strip()
         print(k)
@@ -178,6 +186,7 @@ def respond():
         manga = threading.Thread(name="MANGA", target=obj.start_crowling())
         manga.start()
         print('name:', name, '\nstart :', start, '\nEND :', end)
+        return 'OK'
 
 
 # class RespondToBot(Resource):
