@@ -90,6 +90,8 @@ class MangaCrowler():
                                   message_id=msg.message_id)
             pdf_filename = str(bin_path + name + " Chapter " + str(chapter).zfill(3) + ".pdf")
             state, url = self.get_original_url(name, chapter, 1)
+            state = str(state)
+            url = str(url)
             if state == 'ERROR' and stop:
                 bot.edit_message_text(chat_id=chat_id,
                                       text='ERROR :\n' + url,
@@ -161,7 +163,9 @@ class MangaCrowler():
                 print('[INFO] : Manga Not Found')
                 return 'ERROR', 'Manga Not Found'
             w = WebDriverWait(self.driver, 8)
+            print('w')
             w.until(EC.visibility_of_element_located((By.XPATH, f'//*[@id="TopPage"]/div[{page + 1}]/div/img')))
+            print('ww')
             return 'OK', self.driver.find_element(By.XPATH,
                                                   f'//*[@id="TopPage"]/div[{page + 1}]/div/img').get_attribute(
                 "ng-src")
