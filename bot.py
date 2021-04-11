@@ -169,6 +169,7 @@ def respond():
     if '/start' in userText:
         print(type(userText))
         k = str(userText.removeprefix('/start')).strip()
+        print(k)
         name = ' '.join(k.split()[0:-1])
         chapter = k.split()[-1]
         start = chapter.split('-')[0]

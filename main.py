@@ -27,14 +27,16 @@ class Home(Resource):
 
 api.add_resource(Home, "/")
 if __name__ == "__main__":
-    obj = Test('Abhi')
-    print(obj.get_name())
-    obj.name = 'Luffy'
-
-    print(obj)
-    # a = '/start One Piece 450-450'
-    # if '/start' in a:
-    #     k = str(a.removeprefix('/start')).strip()
+    # obj = Test('Abhi')
+    # print(obj.get_name())
+    # obj.name = 'Luffy'
+    #
+    # print(obj)
+    a = '/start naruto 199-199'
+    print(type(a))
+    if '/start' in a:
+        k = str(a.removeprefix('/start')).strip()
+        print(k)
     #     name = ' '.join(k.split()[0:-1])
     #     chapter = k.split()[-1]
     #     start = chapter.split('-')[0]
