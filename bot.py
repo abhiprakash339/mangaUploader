@@ -163,12 +163,10 @@ class MangaCrowler():
                 print('[INFO] : Manga Not Found')
                 return 'ERROR', 'Manga Not Found'
             w = WebDriverWait(self.driver, 8)
-            print('w')
-            w.until(EC.visibility_of_element_located((By.XPATH, f'//*[@id="TopPage"]/div[{page + 1}]/div/img')))
-            print('ww')
+            w.until(EC.visibility_of_element_located(
+                (By.XPATH, f'//*[@id="TopPage"]/div[{page + 1}]/div/img')))  # //*[@id="TopPage"]/div[2]/div/img
             return 'OK', self.driver.find_element(By.XPATH,
-                                                  f'//*[@id="TopPage"]/div[{page + 1}]/div/img').get_attribute(
-                "ng-src")
+                                                  f'//*[@id="TopPage"]/div[{page + 1}]/div/img').get_attribute("ng-src")
         except Exception as excp:
             print('[INFO] get original ERROR :', excp.args)
             return 'ERROR', excp.args
