@@ -118,9 +118,18 @@ class MangaCrowler():
                                       message_id=msg.message_id)
                 merger = PdfFileMerger()
                 url = f'{main_url}{str(page).zfill(3)}.png'
-                self.session.mount(url, HTTPAdapter(max_retries=5))
-                # code = requests.get(url, headers=headers, stream=True)
-                img_data = self.session.get(url, headers=self.headers, stream=True)
+                # self.session.mount(url, HTTPAdapter(max_retries=5))
+                img_data = None
+                for _ in range(5):
+                    try:
+                        img_data = requests.get(url, headers=self.headers, stream=True)
+                        break
+                    except Exception as excp:
+                        pass
+                # img_data = self.session.get(url, headers=self.headers, stream=True)
+                if img_data is None:
+                    print('PAGE MISSED')
+                    break
                 if img_data.status_code == 200:
                     image = Image.open(img_data.raw)
                     image.load()
@@ -141,6 +150,8 @@ class MangaCrowler():
                     break
                 print('[INFO] Memory Usage :', psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
                 page += 1
+                merger.close()
+                del merger
                 gc.collect()
 
             with open(pdf_filename, 'rb') as file:
