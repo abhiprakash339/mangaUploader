@@ -1,4 +1,6 @@
+import gc
 import threading
+import time
 
 from PIL import Image
 from selenium import webdriver
@@ -15,30 +17,48 @@ from selenium.webdriver.common.by import By
 from flask import Flask, request, send_from_directory
 from flask_restful import Api, Resource
 
+import os, psutil
+
 chromeOptions = webdriver.ChromeOptions()
 chromeOptions.set_headless(headless=True)
-print(chromeOptions.headless)
 # self.driver = webdriver.Firefox(executable_path=GeckoDriverManager().install(), options=fireFoxOptions)
 driver = webdriver.Chrome(executable_path=ChromeDriverManager().install(), options=chromeOptions)
-import os, psutil
 
 
 class Test:
     global driver
 
-    def __init__(self):
-        pass
+    def __init__(self, num):
+        self.num = num
 
     def title(self, URL):
-        while True:
-            driver.get(URL)
+        for url in ['https://google.com' for _ in range(10)]:
+            time.sleep(1)
+
+            driver.get(url)
             print(driver.title)
-            driver.quit()
+            # driver.quit()
+            # PROCNAME = "chromedriver"#geckodriver"  # or chromedriver or iedriverserver
+            # for proc in psutil.process_iter():
+            #     # check whether the process name matches
+            #     if proc.name() == PROCNAME:
+            #         proc.kill()
+            self.num += 1
+            gc.collect()
+        return
 
     def start(self):
         t = threading.Thread(target=self.title, args=('https://google.com',), name='TITLE')
         t.start()
+        # t.join()
+
+    def __del__(self):
+        print('Deleting...')
 
 
-obj = Test()
+obj = Test(2)
 obj.start()
+while True:
+    time.sleep(1)
+    print(obj.__dict__)
+    print('[INFO] Memory Usage :', psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
