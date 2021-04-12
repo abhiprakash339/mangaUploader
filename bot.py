@@ -47,6 +47,7 @@ class MangaCrowler():
         self.driver = webdriver.Chrome(executable_path=ChromeDriverManager().install(), options=chromeOptions)
         temp = [str(i).capitalize() for i in str(name).split()]
         self.manga_name = "-".join(temp)
+        self.pdf_name = str(name)
         self.manga_start = start
         self.manga_end = end
         self.chat_id = chat_id
@@ -89,7 +90,7 @@ class MangaCrowler():
             bot.edit_message_text(chat_id=chat_id,
                                   text=f"{name}\n--------------------------\nChapter :{str(chapter).zfill(3)}",
                                   message_id=msg.message_id)
-            pdf_filename = str(bin_path + name + " Chapter " + str(chapter).zfill(3) + ".pdf")
+            pdf_filename = str(bin_path + self.pdf_name + " Chapter " + str(chapter).zfill(3) + ".pdf")
             state, url = self.get_original_url(name, chapter, 1)
             state = str(state)
             url = str(url)
