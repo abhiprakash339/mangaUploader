@@ -145,6 +145,7 @@ class MangaCrowler():
                         os.remove(pdf_filename)
                         os.rename(temp3, pdf_filename)
                         os.remove(temp2)
+                    image.close()
                     del image
                 else:
                     break
