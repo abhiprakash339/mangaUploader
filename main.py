@@ -20,6 +20,7 @@ chromeOptions.set_headless()
 driver = webdriver.Chrome(executable_path=ChromeDriverManager().install(), options=chromeOptions)
 import os, psutil
 
+
 class Test:
     global driver
 
@@ -30,7 +31,7 @@ class Test:
         while True:
             driver.get(URL)
             print(driver.title)
-
+            driver.quit()
 
     def start(self):
         t = threading.Thread(target=self.title, args=('https://google.com',), name='TITLE')

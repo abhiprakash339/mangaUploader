@@ -16,6 +16,7 @@ itsdangerous==1.1.0
 Jinja2==2.11.3
 MarkupSafe==1.1.1
 Pillow==8.1.1
+psutil==5.8.0
 pymongo==3.11.3
 PyPDF2==1.26.0
 python-telegram-bot==13.3
@@ -26,5 +27,6 @@ six==1.15.0
 soupsieve==2.2
 tornado==6.1
 tzlocal==2.1
+urllib3==1.26.3
 webdriver-manager==3.3.0
 Werkzeug==1.0.1
