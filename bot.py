@@ -136,6 +136,7 @@ class MangaCrowler():
                         os.remove(pdf_filename)
                         os.rename(temp3, pdf_filename)
                         os.remove(temp2)
+                    del image
                 else:
                     break
                 print('[INFO] Memory Usage :', psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
