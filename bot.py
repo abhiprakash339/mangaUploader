@@ -138,7 +138,7 @@ class MangaCrowler():
                         os.remove(temp2)
                 else:
                     break
-                print(url)
+                print('[INFO] Memory Usage :', psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
                 page += 1
                 gc.collect()
 
@@ -154,7 +154,7 @@ class MangaCrowler():
             os.remove(pdf_filename)
             bot.delete_message(chat_id=chat_id, message_id=msg.message_id)
             gc.collect()
-            print('[INFO] Memory Usage :', psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
+
         shutil.rmtree(bin_path)
         # self.driver.quit()
         return
