@@ -161,9 +161,12 @@ class MangaCrowler():
     def get_original_url(self, name, chapter, page):
         url = f'https://manga4life.com/read-online/{name}-chapter-{str(chapter)}-page-{str(page)}.html'
         url_state = requests.get(url)
-        if url_state.status_code != 200:
-            print('[INFO] : Manga Not Found')
-            return 'ERROR', f'{0} chapter {1}Manga Not Found'.format(name, str(chapter))
+        for i in url_state.iter_lines():
+            if 'title' in i.decode():
+                if '404' in i.decode():
+                    print('[INFO] : Manga Not Found')
+                    return 'ERROR', f'{0} chapter {1}Manga Not Found'.format(name, str(chapter))
+                break
         chromeOptions = webdriver.ChromeOptions()
         chromeOptions.set_headless()
         # self.driver = webdriver.Firefox(executable_path=GeckoDriverManager().install(), options=fireFoxOptions)
