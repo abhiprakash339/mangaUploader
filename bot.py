@@ -40,18 +40,15 @@ MANGA_COLLECTION = db.get_collection('manga_url_data')
 
 UpDateId = None
 
-chromeOptions = webdriver.ChromeOptions()
-# fireFoxOptions = webdriver.FirefoxOptions()
-chromeOptions.set_headless()
-# self.driver = webdriver.Firefox(executable_path=GeckoDriverManager().install(), options=fireFoxOptions)
-driver = webdriver.Chrome(executable_path=ChromeDriverManager().install(), options=chromeOptions)
-
 
 # @cache
 class MangaCrowler():
-    global driver
-
     def __init__(self, name, start, end, chat_id):
+        # fireFoxOptions = webdriver.FirefoxOptions()
+        chromeOptions = webdriver.ChromeOptions()
+        chromeOptions.set_headless()
+        # self.driver = webdriver.Firefox(executable_path=GeckoDriverManager().install(), options=fireFoxOptions)
+        self.driver = webdriver.Chrome(executable_path=ChromeDriverManager().install(), options=chromeOptions)
         temp = [str(i).capitalize() for i in str(name).split()]
         self.manga_name = "-".join(temp)
         self.pdf_name = str(name)
@@ -158,22 +155,23 @@ class MangaCrowler():
             os.remove(pdf_filename)
             bot.delete_message(chat_id=chat_id, message_id=msg.message_id)
             gc.collect()
-            print('[INFO] Memory Usage :', psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
+            print('[INFO] Memory Usage :',psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
         shutil.rmtree(bin_path)
+        self.driver.quit()
         return
 
     def get_original_url(self, name, chapter, page):
         url = f'https://manga4life.com/read-online/{name}-chapter-{str(chapter)}-page-{str(page)}.html'
         try:
-            driver.get(url)
-            if "404 Page Not Found" == driver.title:
+            self.driver.get(url)
+            if "404 Page Not Found" == self.driver.title:
                 print('[INFO] : Manga Not Found')
                 return 'ERROR', 'Manga Not Found'
-            w = WebDriverWait(driver, 8)
+            w = WebDriverWait(self.driver, 8)
             w.until(EC.visibility_of_element_located(
                 (By.XPATH, f'//*[@id="TopPage"]/div[{page + 1}]/div/img')))  # //*[@id="TopPage"]/div[2]/div/img
-            return 'OK', driver.find_element(By.XPATH,
-                                             f'//*[@id="TopPage"]/div[{page + 1}]/div/img').get_attribute("ng-src")
+            return 'OK', self.driver.find_element(By.XPATH,
+                                                  f'//*[@id="TopPage"]/div[{page + 1}]/div/img').get_attribute("ng-src")
         except Exception as excp:
             print('[INFO] ERROR :', excp.args)
             return 'ERROR', excp.args
