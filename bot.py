@@ -50,6 +50,7 @@ driver = webdriver.Chrome(executable_path=ChromeDriverManager().install(), optio
 # @cache
 class MangaCrowler():
     global driver
+
     def __init__(self, name, start, end, chat_id):
         temp = [str(i).capitalize() for i in str(name).split()]
         self.manga_name = "-".join(temp)
@@ -172,7 +173,7 @@ class MangaCrowler():
             w.until(EC.visibility_of_element_located(
                 (By.XPATH, f'//*[@id="TopPage"]/div[{page + 1}]/div/img')))  # //*[@id="TopPage"]/div[2]/div/img
             return 'OK', driver.find_element(By.XPATH,
-                                                  f'//*[@id="TopPage"]/div[{page + 1}]/div/img').get_attribute("ng-src")
+                                             f'//*[@id="TopPage"]/div[{page + 1}]/div/img').get_attribute("ng-src")
         except Exception as excp:
             print('[INFO] ERROR :', excp.args)
             return 'ERROR', excp.args
