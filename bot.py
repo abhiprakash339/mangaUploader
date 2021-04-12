@@ -8,7 +8,7 @@ import psutil
 import telegram
 import requests
 
-from functools import cache
+# from functools import cache
 from PIL import Image
 from selenium import webdriver
 from pymongo import MongoClient
@@ -41,7 +41,7 @@ MANGA_COLLECTION = db.get_collection('manga_url_data')
 UpDateId = None
 
 
-@cache
+# @cache
 class MangaCrowler():
     def __init__(self, name, start, end, chat_id):
         # fireFoxOptions = webdriver.FirefoxOptions()

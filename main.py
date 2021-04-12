@@ -8,6 +8,7 @@ from configparser import ConfigParser
 from requests.adapters import HTTPAdapter
 # from webdriver_manager.firefox import GeckoDriverManager
 from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
@@ -15,7 +16,8 @@ from flask import Flask, request, send_from_directory
 from flask_restful import Api, Resource
 
 chromeOptions = webdriver.ChromeOptions()
-chromeOptions.set_headless()
+chromeOptions.set_headless(headless=True)
+print(chromeOptions.headless)
 # self.driver = webdriver.Firefox(executable_path=GeckoDriverManager().install(), options=fireFoxOptions)
 driver = webdriver.Chrome(executable_path=ChromeDriverManager().install(), options=chromeOptions)
 import os, psutil
