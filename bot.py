@@ -75,8 +75,9 @@ class MangaCrowler():
 
         temp2 = f"{bin_path}/temp2.pdf"
         temp3 = f"{bin_path}/temp3.pdf"
-        msg = bot.sendMessage(chat_id=chat_id, text=f"{name}\n--------------------------")
+
         while temp <= end:
+            msg = bot.sendMessage(chat_id=chat_id, text=f"{name}\n--------------------------")
             ch = round(temp, 1)
             if ch.is_integer():
                 chapter = str(int(ch))
