@@ -55,10 +55,10 @@ class MangaCrowler():
         self.session = requests.Session()
         self.manga_crowler_thread = None
         self.headers = {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:66.0) Gecko/20100101 Firefox/66.0",
-                "Accept-Encoding": "*",
-                "Connection": "keep-alive"
-            }
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:66.0) Gecko/20100101 Firefox/66.0",
+            "Accept-Encoding": "*",
+            "Connection": "keep-alive"
+        }
 
     def start_crowling(self):
         self.manga_crowler_thread = threading.Thread(name="MANGA", target=self.manga_crowler, args=(
@@ -153,13 +153,17 @@ class MangaCrowler():
             os.remove(pdf_filename)
             bot.delete_message(chat_id=chat_id, message_id=msg.message_id)
             gc.collect()
-            print('[INFO] Memory Usage :',psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
+            print('[INFO] Memory Usage :', psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
         shutil.rmtree(bin_path)
         # self.driver.quit()
         return
 
     def get_original_url(self, name, chapter, page):
         url = f'https://manga4life.com/read-online/{name}-chapter-{str(chapter)}-page-{str(page)}.html'
+        url_state = requests.get(url)
+        if url_state.status_code != 200:
+            print('[INFO] : Manga Not Found')
+            return 'ERROR', f'{0} chapter {1}Manga Not Found'.format(name, str(chapter))
         chromeOptions = webdriver.ChromeOptions()
         chromeOptions.set_headless()
         # self.driver = webdriver.Firefox(executable_path=GeckoDriverManager().install(), options=fireFoxOptions)
@@ -168,12 +172,15 @@ class MangaCrowler():
             driver.get(url)
             if "404 Page Not Found" == driver.title:
                 print('[INFO] : Manga Not Found')
+                gc.collect()
+                driver.quit()
                 return 'ERROR', 'Manga Not Found'
             w = WebDriverWait(driver, 8)
             w.until(EC.visibility_of_element_located(
                 (By.XPATH, f'//*[@id="TopPage"]/div[{page + 1}]/div/img')))  # //*[@id="TopPage"]/div[2]/div/img
             del w
-            url_data = driver.find_element(By.XPATH,f'//*[@id="TopPage"]/div[{page + 1}]/div/img').get_attribute("ng-src")
+            url_data = driver.find_element(By.XPATH, f'//*[@id="TopPage"]/div[{page + 1}]/div/img').get_attribute(
+                "ng-src")
             gc.collect()
             driver.quit()
             return 'OK', url_data
