@@ -39,7 +39,8 @@ USERS = db.get_collection('users_inputs')
 MANGA_COLLECTION = db.get_collection('manga_url_data')
 
 UpDateId = None
-
+chromeOptions = webdriver.ChromeOptions()
+chromeOptions.set_headless()
 
 # @cache
 class MangaCrowler():
@@ -165,18 +166,20 @@ class MangaCrowler():
             if 'title' in i.decode():
                 if '404' in i.decode():
                     print('[INFO] : Manga Not Found')
+                    gc.collect()
                     return 'ERROR', f'{0} chapter {1}Manga Not Found'.format(name, str(chapter))
                 break
-        chromeOptions = webdriver.ChromeOptions()
-        chromeOptions.set_headless()
+
         # self.driver = webdriver.Firefox(executable_path=GeckoDriverManager().install(), options=fireFoxOptions)
+        global chromeOptions
         driver = webdriver.Chrome(executable_path=ChromeDriverManager().install(), options=chromeOptions)
         try:
             driver.get(url)
             if "404 Page Not Found" == driver.title:
                 print('[INFO] : Manga Not Found')
-                gc.collect()
+
                 driver.quit()
+                gc.collect()
                 return 'ERROR', 'Manga Not Found'
             w = WebDriverWait(driver, 8)
             w.until(EC.visibility_of_element_located(
@@ -184,8 +187,9 @@ class MangaCrowler():
             del w
             url_data = driver.find_element(By.XPATH, f'//*[@id="TopPage"]/div[{page + 1}]/div/img').get_attribute(
                 "ng-src")
-            gc.collect()
+
             driver.quit()
+            gc.collect()
             return 'OK', url_data
         except Exception as excp:
             print('[INFO] ERROR :', excp.args)
