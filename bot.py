@@ -3,9 +3,12 @@ import json
 import os
 import shutil
 import threading
+
+import psutil
 import telegram
 import requests
 
+from functools import cache
 from PIL import Image
 from selenium import webdriver
 from pymongo import MongoClient
@@ -38,6 +41,7 @@ MANGA_COLLECTION = db.get_collection('manga_url_data')
 UpDateId = None
 
 
+@cache
 class MangaCrowler():
     def __init__(self, name, start, end, chat_id):
         # fireFoxOptions = webdriver.FirefoxOptions()
@@ -87,7 +91,6 @@ class MangaCrowler():
                 chapter = str(ch)
                 stop = False
             temp = round(temp, 10) + round(0.1, 10)
-            print("[ INFO ] :", chapter)
             pdf_filename = str(bin_path + self.pdf_name + " Chapter " + str(chapter).zfill(3) + ".pdf")
             state, url = self.get_original_url(name, chapter, 1)
             state = str(state)
@@ -152,13 +155,13 @@ class MangaCrowler():
             os.remove(pdf_filename)
             bot.delete_message(chat_id=chat_id, message_id=msg.message_id)
             gc.collect()
+            print('[INFO] Memory Usage :',psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
         shutil.rmtree(bin_path)
-        self.driver.close()
+        self.driver.quit()
         return
 
     def get_original_url(self, name, chapter, page):
         url = f'https://manga4life.com/read-online/{name}-chapter-{str(chapter)}-page-{str(page)}.html'
-        print(url)
         try:
             self.driver.get(url)
             if "404 Page Not Found" == self.driver.title:
@@ -170,7 +173,7 @@ class MangaCrowler():
             return 'OK', self.driver.find_element(By.XPATH,
                                                   f'//*[@id="TopPage"]/div[{page + 1}]/div/img').get_attribute("ng-src")
         except Exception as excp:
-            print('[INFO] get original ERROR :', excp.args)
+            print('[INFO] ERROR :', excp.args)
             return 'ERROR', excp.args
 
 

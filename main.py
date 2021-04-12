@@ -1,13 +1,41 @@
-import os
-hostname = "google.com" #example
-name = 'Naruto'
-chapter = '1'
-page = '001'
-# url = f'https://manga4life.com/read-online/{name}-chapter-{str(chapter)}-page-{str(page)}.html'
-url = 'https://manga4life.com/read-online/Naruto-chapter-1-page-001.html'
-response = os.system("ping " + url+" -n 1")
+import threading
 
-if response == 0:
-  print('up!')
-else:
-  print('down!')
+from PIL import Image
+from selenium import webdriver
+from pymongo import MongoClient
+from PyPDF2 import PdfFileMerger
+from configparser import ConfigParser
+from requests.adapters import HTTPAdapter
+# from webdriver_manager.firefox import GeckoDriverManager
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+from flask import Flask, request, send_from_directory
+from flask_restful import Api, Resource
+
+chromeOptions = webdriver.ChromeOptions()
+chromeOptions.set_headless()
+# self.driver = webdriver.Firefox(executable_path=GeckoDriverManager().install(), options=fireFoxOptions)
+driver = webdriver.Chrome(executable_path=ChromeDriverManager().install(), options=chromeOptions)
+import os, psutil
+
+class Test:
+    global driver
+
+    def __init__(self):
+        pass
+
+    def title(self, URL):
+        while True:
+            driver.get(URL)
+            print(driver.title)
+
+
+    def start(self):
+        t = threading.Thread(target=self.title, args=('https://google.com',), name='TITLE')
+        t.start()
+
+
+obj = Test()
+obj.start()
