@@ -45,10 +45,7 @@ UpDateId = None
 class MangaCrowler():
     def __init__(self, name, start, end, chat_id):
         # fireFoxOptions = webdriver.FirefoxOptions()
-        chromeOptions = webdriver.ChromeOptions()
-        chromeOptions.set_headless()
-        # self.driver = webdriver.Firefox(executable_path=GeckoDriverManager().install(), options=fireFoxOptions)
-        self.driver = webdriver.Chrome(executable_path=ChromeDriverManager().install(), options=chromeOptions)
+
         temp = [str(i).capitalize() for i in str(name).split()]
         self.manga_name = "-".join(temp)
         self.pdf_name = str(name)
@@ -57,6 +54,11 @@ class MangaCrowler():
         self.chat_id = chat_id
         self.session = requests.Session()
         self.manga_crowler_thread = None
+        self.headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:66.0) Gecko/20100101 Firefox/66.0",
+                "Accept-Encoding": "*",
+                "Connection": "keep-alive"
+            }
 
     def start_crowling(self):
         self.manga_crowler_thread = threading.Thread(name="MANGA", target=self.manga_crowler, args=(
@@ -106,11 +108,7 @@ class MangaCrowler():
                                   message_id=msg.message_id)
             print("[ INFO ] Original URL :", url)
             main_url = url[:-7]
-            headers = {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:66.0) Gecko/20100101 Firefox/66.0",
-                "Accept-Encoding": "*",
-                "Connection": "keep-alive"
-            }
+
             page = 1
             while True:
                 gc.collect()
@@ -121,7 +119,7 @@ class MangaCrowler():
                 url = f'{main_url}{str(page).zfill(3)}.png'
                 self.session.mount(url, HTTPAdapter(max_retries=5))
                 # code = requests.get(url, headers=headers, stream=True)
-                img_data = self.session.get(url, headers=headers, stream=True)
+                img_data = self.session.get(url, headers=self.headers, stream=True)
                 if img_data.status_code == 200:
                     image = Image.open(img_data.raw)
                     image.load()
@@ -157,21 +155,28 @@ class MangaCrowler():
             gc.collect()
             print('[INFO] Memory Usage :',psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
         shutil.rmtree(bin_path)
-        self.driver.quit()
+        # self.driver.quit()
         return
 
     def get_original_url(self, name, chapter, page):
         url = f'https://manga4life.com/read-online/{name}-chapter-{str(chapter)}-page-{str(page)}.html'
+        chromeOptions = webdriver.ChromeOptions()
+        chromeOptions.set_headless()
+        # self.driver = webdriver.Firefox(executable_path=GeckoDriverManager().install(), options=fireFoxOptions)
+        driver = webdriver.Chrome(executable_path=ChromeDriverManager().install(), options=chromeOptions)
         try:
-            self.driver.get(url)
-            if "404 Page Not Found" == self.driver.title:
+            driver.get(url)
+            if "404 Page Not Found" == driver.title:
                 print('[INFO] : Manga Not Found')
                 return 'ERROR', 'Manga Not Found'
-            w = WebDriverWait(self.driver, 8)
+            w = WebDriverWait(driver, 8)
             w.until(EC.visibility_of_element_located(
                 (By.XPATH, f'//*[@id="TopPage"]/div[{page + 1}]/div/img')))  # //*[@id="TopPage"]/div[2]/div/img
-            return 'OK', self.driver.find_element(By.XPATH,
-                                                  f'//*[@id="TopPage"]/div[{page + 1}]/div/img').get_attribute("ng-src")
+            del w
+            url_data = driver.find_element(By.XPATH,f'//*[@id="TopPage"]/div[{page + 1}]/div/img').get_attribute("ng-src")
+            gc.collect()
+            driver.quit()
+            return 'OK', url_data
         except Exception as excp:
             print('[INFO] ERROR :', excp.args)
             return 'ERROR', excp.args
