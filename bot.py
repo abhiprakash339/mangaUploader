@@ -78,7 +78,7 @@ class MangaCrowler():
         temp3 = f"{bin_path}/temp3.pdf"
 
         while temp <= end:
-            msg = bot.sendMessage(chat_id=chat_id, text=f"{name}\n--------------------------")
+
             ch = round(temp, 1)
             if ch.is_integer():
                 chapter = str(int(ch))
@@ -86,22 +86,21 @@ class MangaCrowler():
             else:
                 chapter = str(ch)
                 stop = False
+            temp = round(temp, 10) + round(0.1, 10)
             print("[ INFO ] :", chapter)
-            bot.edit_message_text(chat_id=chat_id,
-                                  text=f"{name}\n--------------------------\nChapter :{str(chapter).zfill(3)}",
-                                  message_id=msg.message_id)
             pdf_filename = str(bin_path + self.pdf_name + " Chapter " + str(chapter).zfill(3) + ".pdf")
             state, url = self.get_original_url(name, chapter, 1)
             state = str(state)
             url = str(url)
             if state == 'ERROR' and stop:
-                bot.edit_message_text(chat_id=chat_id,
-                                      text='ERROR :\n' + url,
-                                      message_id=msg.message_id)
+                bot.sendMessage(chat_id=chat_id, text='ERROR :\n' + url)
                 break
             elif state == 'ERROR' and not stop:
                 continue
-            temp = round(temp, 10) + round(0.1, 10)
+            msg = bot.sendMessage(chat_id=chat_id, text=f"{name}\n--------------------------")
+            bot.edit_message_text(chat_id=chat_id,
+                                  text=f"{name}\n--------------------------\nChapter :{str(chapter).zfill(3)}",
+                                  message_id=msg.message_id)
             print("[ INFO ] Original URL :", url)
             main_url = url[:-7]
             headers = {
