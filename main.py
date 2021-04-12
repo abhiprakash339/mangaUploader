@@ -1,64 +1,13 @@
 import os
-import threading
-import time
-import signal
-from flask import Flask, request, send_from_directory
-from flask_restful import Api, Resource
-from dataclasses import dataclass
-from functools import cache
+hostname = "google.com" #example
+name = 'Naruto'
+chapter = '1'
+page = '001'
+# url = f'https://manga4life.com/read-online/{name}-chapter-{str(chapter)}-page-{str(page)}.html'
+url = 'https://manga4life.com/read-online/Naruto-chapter-1-page-001.html'
+response = os.system("ping " + url+" -n 1")
 
-app = Flask(__name__)
-api = Api(app)
-
-def t():
-    for i in range(10):
-        time.sleep(1)
-        print(i)
-
-# @cache
-@dataclass(order=True)
-class Test:
-    name: str
-
-    def name(self, value):
-        self.name = value
-
-    def get_name(self):
-        return self.name
-
-
-@dataclass(frozen=True, order=True)
-class Home(Resource):
-    def get(self):
-        return 'WELCOME TO MANGA-UPLOADER'
-
-
-api.add_resource(Home, "/")
-if __name__ == "__main__":
-    t = threading.Thread(name="MANGA", target=t)
-    t.start()
-    print(t.native_id)
-    os.kill(t.native_id,signal.SIGBREAK)
-    exit(0)
-    user = '@Itachi_Uchiha123'
-    if '@Itachi_Uchiha_123' != user:
-        print('ok')
-    print('kk')
-    exit(0)
-    # obj = Test('Abhi')
-    # print(obj.get_name())
-    # obj.name = 'Luffy'
-    #
-    # print(obj)
-    a = '/start naruto 199-199'
-    print(type(a))
-    if '/start' in a:
-        print(str(a.strip('199')).strip())
-        # k = str(a.removeprefix('/start')).strip()
-        # print(k)
-    #     name = ' '.join(k.split()[0:-1])
-    #     chapter = k.split()[-1]
-    #     start = chapter.split('-')[0]
-    #     end = chapter.split('-')[1]
-    #     print('name:', name, '\nstart :', start, '\nEND :', end)
-    # app.run(port=3000, debug=True)
+if response == 0:
+  print('up!')
+else:
+  print('down!')

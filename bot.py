@@ -78,7 +78,7 @@ class MangaCrowler():
         temp3 = f"{bin_path}/temp3.pdf"
 
         while temp <= end:
-
+            gc.collect()
             ch = round(temp, 1)
             if ch.is_integer():
                 chapter = str(int(ch))
@@ -110,6 +110,7 @@ class MangaCrowler():
             }
             page = 1
             while True:
+                gc.collect()
                 bot.edit_message_text(chat_id=chat_id,
                                       text=f"{name}\n=====Downloading=====\nChapter :{str(chapter).zfill(3)}\nPAGE : {page}",
                                       message_id=msg.message_id)
