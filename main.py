@@ -1,6 +1,8 @@
-pdf_name = 'Kaguya Wants To Be Confessed To'
-# pdf_name = 'Boku no hero Academia'
-# pdf_name = 'the beginning after the end'
-chapter = 2
-a = pdf_name + " Chapter " + str(chapter).zfill(3) + ".pdf"
-print(len(a))
+import math
+q = float(1/22) * 100
+print(q)
+print(math.floor(q))
+# print(round(q,1))
+per = int(q) * 100
+print(per)
+# print(int((1/22)*100))

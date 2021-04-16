@@ -10,16 +10,19 @@ import requests
 
 # from functools import cache
 from PIL import Image
-from selenium import webdriver
+
 from pymongo import MongoClient
 from PyPDF2 import PdfFileMerger
 from configparser import ConfigParser
 from requests.adapters import HTTPAdapter
 # from webdriver_manager.firefox import GeckoDriverManager
+
+from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
+
 from flask import Flask, request, send_from_directory
 from flask_restful import Api, Resource
 
@@ -96,7 +99,7 @@ class MangaCrowler():
                 stop = False
             temp = round(temp, 10) + round(0.1, 10)
             pdf_filename = str(bin_path + self.pdf_name + " Chapter " + str(chapter).zfill(3) + ".pdf")
-            state, url = self.get_original_url(name, chapter, 1)
+            state, url, total_page = self.get_original_url(name, chapter, 1)
             state = str(state)
             url = str(url)
             if state == 'ERROR' and stop:
@@ -115,7 +118,7 @@ class MangaCrowler():
             while True:
                 gc.collect()
                 bot.edit_message_text(chat_id=chat_id,
-                                      text=f"{name}\n=====Downloading=====\nChapter :{str(chapter).zfill(3)}\nPAGE : {page}",
+                                      text=f"{name}\n=====Downloading=====\nChapter :{str(chapter).zfill(3)}\nPAGE %: {float(page/22) * 100}",
                                       message_id=msg.message_id)
                 merger = PdfFileMerger()
                 url = f'{main_url}{str(page).zfill(3)}.png'
@@ -162,9 +165,10 @@ class MangaCrowler():
                                       text=f"{name}\n=====Uploading=====\n\nChapter :{str(chapter).zfill(3)}",
                                       message_id=msg.message_id)
                 if len(self.pdf_name + " Chapter " + str(chapter).zfill(3) + ".pdf") > 45:
-                    print("[ BOT ] ", bot.sendDocument(document=file, chat_id=chat_id,caption='#'+str(chapter).zfill(3)))
+                    print("[ BOT ] ",
+                          bot.sendDocument(document=file, chat_id=chat_id, caption='#' + str(chapter).zfill(3)))
                 else:
-                    print("[ BOT ] ",bot.sendDocument(document=file, chat_id=chat_id))
+                    print("[ BOT ] ", bot.sendDocument(document=file, chat_id=chat_id))
 
                 bot.edit_message_text(chat_id=chat_id, text="Uploading PDF Completed", message_id=msg.message_id)
 
@@ -185,7 +189,7 @@ class MangaCrowler():
                 if '404' in i.decode():
                     print('[INFO] : Manga Not Found')
                     gc.collect()
-                    return 'ERROR', f'{0} chapter {1}Manga Not Found'.format(name, str(chapter))
+                    return 'ERROR', f'{0} chapter {1}Manga Not Found'.format(name, str(chapter)), 0
                 break
 
         # self.driver = webdriver.Firefox(executable_path=GeckoDriverManager().install(), options=fireFoxOptions)
@@ -198,20 +202,27 @@ class MangaCrowler():
 
                 driver.quit()
                 gc.collect()
-                return 'ERROR', 'Manga Not Found'
+                return 'ERROR', 'Manga Not Found', 0
             w = WebDriverWait(driver, 8)
             w.until(EC.visibility_of_element_located(
                 (By.XPATH, f'//*[@id="TopPage"]/div[{page + 1}]/div/img')))  # //*[@id="TopPage"]/div[2]/div/img
             del w
             url_data = driver.find_element(By.XPATH, f'//*[@id="TopPage"]/div[{page + 1}]/div/img').get_attribute(
                 "ng-src")
-
+            # ---- find page ----
+            toppage = driver.find_element_by_id("TopPage")
+            ng_scopes = toppage.find_elements_by_class_name("ng-scope")
+            counter = 0
+            for ng_scope in ng_scopes:
+                if ng_scope.get_attribute("ng-repeat") == 'Page in vm.Pages':
+                    counter += 1
+            # --------------------
             driver.quit()
             gc.collect()
-            return 'OK', url_data
+            return 'OK', url_data, counter
         except Exception as excp:
             print('[INFO] ERROR :', excp.args)
-            return 'ERROR', excp.args
+            return 'ERROR', excp.args, 0
 
 
 @app.route('/{}'.format(TOKEN), methods=['POST'])
