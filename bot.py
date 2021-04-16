@@ -100,6 +100,7 @@ class MangaCrowler():
             temp = round(temp, 10) + round(0.1, 10)
             pdf_filename = str(bin_path + self.pdf_name + " Chapter " + str(chapter).zfill(3) + ".pdf")
             state, url, total_page = self.get_original_url(name, chapter, 1)
+            print('[INFO] Total Page :',total_page)
             state = str(state)
             url = str(url)
             if state == 'ERROR' and stop:
@@ -119,7 +120,7 @@ class MangaCrowler():
             while True:
                 gc.collect()
                 bot.edit_message_text(chat_id=chat_id,
-                                      text=f"{name}\n\nDownloading :\n\nChapter :{str(chapter).zfill(3)}\nPAGE : {page}\nPercentage :{int(float(page/22) * 100)}%",
+                                      text=f"{name}\n\nDownloading :\n\nChapter :{str(chapter).zfill(3)}\nPAGE : {page}\nPercentage :{int(float(page/total_page) * 100)}%",
                                       message_id=msg.message_id)
                 merger = PdfFileMerger()
                 url = f'{main_url}{str(page).zfill(3)}.png'
