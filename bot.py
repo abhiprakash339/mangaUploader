@@ -118,7 +118,7 @@ class MangaCrowler():
             while True:
                 gc.collect()
                 bot.edit_message_text(chat_id=chat_id,
-                                      text=f"{name}\n=====Downloading=====\nChapter :{str(chapter).zfill(3)}\nPAGE %: {float(page/22) * 100}",
+                                      text=f"{name}\n=====Downloading=====\nChapter :{str(chapter).zfill(3)}\nPAGE %: {int(float(page/22) * 100)}",
                                       message_id=msg.message_id)
                 merger = PdfFileMerger()
                 url = f'{main_url}{str(page).zfill(3)}.png'
