@@ -161,7 +161,7 @@ class MangaCrowler():
                 bot.edit_message_text(chat_id=chat_id,
                                       text=f"{name}\n=====Uploading=====\n\nChapter :{str(chapter).zfill(3)}",
                                       message_id=msg.message_id)
-                if len(self.pdf_name + " Chapter " + str(chapter).zfill(3) + ".pdf") >= 40:
+                if len(self.pdf_name + " Chapter " + str(chapter).zfill(3) + ".pdf") > 45:
                     print("[ BOT ] ", bot.sendDocument(document=file, chat_id=chat_id,caption='#'+str(chapter).zfill(3)))
                 else:
                     print("[ BOT ] ",bot.sendDocument(document=file, chat_id=chat_id))
