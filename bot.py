@@ -42,6 +42,7 @@ UpDateId = None
 chromeOptions = webdriver.ChromeOptions()
 chromeOptions.set_headless()
 
+
 # @cache
 class MangaCrowler():
     def __init__(self, name, start, end, chat_id):
@@ -149,6 +150,7 @@ class MangaCrowler():
                     del image
                 else:
                     break
+                print('[INFO] PAGE: ', page)
                 print('[INFO] Memory Usage :', psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
                 page += 1
                 merger.close()
@@ -159,7 +161,10 @@ class MangaCrowler():
                 bot.edit_message_text(chat_id=chat_id,
                                       text=f"{name}\n=====Uploading=====\n\nChapter :{str(chapter).zfill(3)}",
                                       message_id=msg.message_id)
-                print("[ BOT ] ", bot.sendDocument(document=file, chat_id=chat_id, ))
+                if len(self.pdf_name + " Chapter " + str(chapter).zfill(3) + ".pdf") >= 35:
+                    print("[ BOT ] ", bot.sendDocument(document=file, chat_id=chat_id,caption='#'+str(chapter).zfill(3)))
+                else:
+                    print("[ BOT ] ",bot.sendDocument(document=file, chat_id=chat_id))
 
                 bot.edit_message_text(chat_id=chat_id, text="Uploading PDF Completed", message_id=msg.message_id)
 
