@@ -107,18 +107,19 @@ class MangaCrowler():
                 break
             elif state == 'ERROR' and not stop:
                 continue
-            msg = bot.sendMessage(chat_id=chat_id, text=f"{name}\n--------------------------")
-            bot.edit_message_text(chat_id=chat_id,
-                                  text=f"{name}\n--------------------------\nChapter :{str(chapter).zfill(3)}",
-                                  message_id=msg.message_id)
+            msg = bot.sendMessage(chat_id=chat_id, text=f"{name}\n\nInitializing :")
+
             print("[ INFO ] Original URL :", url)
             main_url = url[:-7]
 
             page = 1
+            bot.edit_message_text(chat_id=chat_id,
+                                  text=f"{name}\n\nDownloading :\n\nChapter :{str(chapter).zfill(3)}\nPAGE :{page}\nPercentage :0%",
+                                  message_id=msg.message_id)
             while True:
                 gc.collect()
                 bot.edit_message_text(chat_id=chat_id,
-                                      text=f"{name}\n=====Downloading=====\nChapter :{str(chapter).zfill(3)}\nPAGE %: {int(float(page/22) * 100)}",
+                                      text=f"{name}\n\nDownloading :\n\nChapter :{str(chapter).zfill(3)}\nPAGE : {page}\nPercentage :{int(float(page/22) * 100)}%",
                                       message_id=msg.message_id)
                 merger = PdfFileMerger()
                 url = f'{main_url}{str(page).zfill(3)}.png'
