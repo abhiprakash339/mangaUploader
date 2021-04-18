@@ -158,16 +158,16 @@ class MangaCrowler():
                     del image
                 else:
                     break
-
+                bot.edit_message_text(chat_id=chat_id,
+                                      text=f"{name}\n\nDownloading :\n\nChapter :{str(chapter).zfill(3)}\nPAGE : {page}\nPercentage :{int(float(page / total_page) * 100)}%",
+                                      message_id=msg.message_id)
                 page += 1
                 merger.close()
                 del merger
                 gc.collect()
                 print('[INFO] PAGE: ', page)
                 print('[INFO] Memory Usage :', psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
-                bot.edit_message_text(chat_id=chat_id,
-                                      text=f"{name}\n\nDownloading :\n\nChapter :{str(chapter).zfill(3)}\nPAGE : {page}\nPercentage :{int(float(page / total_page) * 100)}%",
-                                      message_id=msg.message_id)
+
 
             with open(pdf_filename, 'rb') as file:
                 bot.edit_message_text(chat_id=chat_id,
