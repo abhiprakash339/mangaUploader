@@ -35,11 +35,14 @@ config.read('bot.ini')
 TOKEN = config['BOT']['TOKEN']
 URL = config['SERVER']['URL']
 bot = telegram.Bot(token=TOKEN)
+"""
 
-client = MongoClient(config["API"]["MONGO-DB"])
-db = client.get_database("Telegram_Bot")
-USERS = db.get_collection('users_inputs')
-MANGA_COLLECTION = db.get_collection('manga_url_data')
+# client = MongoClient(config["API"]["MONGO-DB"])
+# db = client.get_database("Telegram_Bot")
+# USERS = db.get_collection('users_inputs')
+# MANGA_COLLECTION = db.get_collection('manga_url_data')
+
+"""
 
 UpDateId = None
 chromeOptions = webdriver.ChromeOptions()
@@ -89,6 +92,7 @@ class MangaCrowler():
         temp3 = f"{bin_path}/temp3.pdf"
 
         while temp <= end:
+            msg = bot.sendMessage(chat_id=chat_id, text=f"{name}\n\nInitializing.")
             gc.collect()
             ch = round(temp, 1)
             if ch.is_integer():
@@ -97,10 +101,11 @@ class MangaCrowler():
             else:
                 chapter = str(ch)
                 stop = False
+            bot.edit_message_text(chat_id=chat_id, text=f"{name}\n\nInitializing..", message_id=msg.message_id)
             temp = round(temp, 10) + round(0.1, 10)
             pdf_filename = str(bin_path + self.pdf_name + " Chapter " + str(chapter).zfill(3) + ".pdf")
             state, url, total_page = self.get_original_url(name, chapter, 1)
-            print('[INFO] Total Page :',total_page)
+            print('[INFO] Total Page :', total_page)
             state = str(state)
             url = str(url)
             if state == 'ERROR' and stop:
@@ -108,7 +113,7 @@ class MangaCrowler():
                 break
             elif state == 'ERROR' and not stop:
                 continue
-            msg = bot.sendMessage(chat_id=chat_id, text=f"{name}\n\nInitializing :")
+            bot.edit_message_text(chat_id=chat_id, text=f"{name}\n\nInitializing...", message_id=msg.message_id)
 
             print("[ INFO ] Original URL :", url)
             main_url = url[:-7]
@@ -119,20 +124,18 @@ class MangaCrowler():
                                   message_id=msg.message_id)
             while True:
                 gc.collect()
-                bot.edit_message_text(chat_id=chat_id,
-                                      text=f"{name}\n\nDownloading :\n\nChapter :{str(chapter).zfill(3)}\nPAGE : {page}\nPercentage :{int(float(page/total_page) * 100)}%",
-                                      message_id=msg.message_id)
+
                 merger = PdfFileMerger()
                 url = f'{main_url}{str(page).zfill(3)}.png'
-                # self.session.mount(url, HTTPAdapter(max_retries=5))
+                self.session.mount(url, HTTPAdapter(max_retries=5))
                 img_data = None
-                for _ in range(5):
-                    try:
-                        img_data = requests.get(url, headers=self.headers, stream=True)
-                        break
-                    except Exception as excp:
-                        pass
-                # img_data = self.session.get(url, headers=self.headers, stream=True)
+                # for _ in range(5):
+                #     try:
+                #         img_data = requests.get(url, headers=self.headers, stream=True)
+                #         break
+                #     except Exception as excp:
+                #         pass
+                img_data = self.session.get(url, headers=self.headers, stream=True)
                 if img_data is None:
                     print('PAGE MISSED')
                     break
@@ -155,12 +158,16 @@ class MangaCrowler():
                     del image
                 else:
                     break
-                print('[INFO] PAGE: ', page)
-                print('[INFO] Memory Usage :', psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
+
                 page += 1
                 merger.close()
                 del merger
                 gc.collect()
+                print('[INFO] PAGE: ', page)
+                print('[INFO] Memory Usage :', psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
+                bot.edit_message_text(chat_id=chat_id,
+                                      text=f"{name}\n\nDownloading :\n\nChapter :{str(chapter).zfill(3)}\nPAGE : {page}\nPercentage :{int(float(page / total_page) * 100)}%",
+                                      message_id=msg.message_id)
 
             with open(pdf_filename, 'rb') as file:
                 bot.edit_message_text(chat_id=chat_id,
@@ -236,14 +243,10 @@ def respond():
     chat_id = update.message.chat.id
     msg_id = update.message.message_id
     userText = update.message.text.encode('utf-8').decode()
-    print("[INFO] got text message :", userText)
-    print("[INFO] UPDATE ID :", update_id)
-    print('[INFO] UpDateId :', UpDateId)
-    print("[INFO] CHAT ID :", chat_id)
-    print("[INFO] MESSAGE ID :", msg_id)
+    print("[INFO] MESSAGE :", userText)
     print("[INFO] USER :", user)
-    usr_data = USERS.find_one({"user": user})
-    usr_state = int(usr_data["Active"])
+    # usr_data = USERS.find_one({"user": user})
+    # usr_state = int(usr_data["Active"])
     if '@Itachi_Uchiha_123' != user:
         bot.sendMessage(chat_id=chat_id, text="You are Not allowed to Use This BOT")
         return 'OK'
@@ -265,6 +268,7 @@ def respond():
         print('[INFO] Object Created')
         return 'OK'
     else:
+        bot.sendMessage(chat_id=chat_id, text="/start <manga name> StartChapter-EndChapter")
         return 'OK'
 
 
