@@ -109,9 +109,11 @@ class MangaCrowler():
             state = str(state)
             url = str(url)
             if state == 'ERROR' and stop:
+                bot.delete_message(chat_id=chat_id, message_id=msg.message_id)
                 bot.sendMessage(chat_id=chat_id, text='ERROR :\n' + url)
                 break
             elif state == 'ERROR' and not stop:
+                bot.delete_message(chat_id=chat_id, message_id=msg.message_id)
                 continue
             bot.edit_message_text(chat_id=chat_id, text=f"{name}\n\nInitializing...", message_id=msg.message_id)
 
