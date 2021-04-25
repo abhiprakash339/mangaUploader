@@ -130,13 +130,6 @@ class MangaCrowler():
                 merger = PdfFileMerger()
                 url = f'{main_url}{str(page).zfill(3)}.png'
                 self.session.mount(url, HTTPAdapter(max_retries=5))
-                img_data = None
-                # for _ in range(5):
-                #     try:
-                #         img_data = requests.get(url, headers=self.headers, stream=True)
-                #         break
-                #     except Exception as excp:
-                #         pass
                 img_data = self.session.get(url, headers=self.headers, stream=True)
                 if img_data is None:
                     print('PAGE MISSED')
@@ -159,6 +152,7 @@ class MangaCrowler():
                     image.close()
                     del image
                 else:
+                    print('[INFO] UNKNOWN ERROR')
                     break
                 bot.edit_message_text(chat_id=chat_id,
                                       text=f"{name}\n\nDownloading :\n\nChapter :{str(chapter).zfill(3)}\nPAGE : {page}\nPercentage :{int(float(page / total_page) * 100)}%",
@@ -169,7 +163,6 @@ class MangaCrowler():
                 gc.collect()
                 print('[INFO] PAGE: ', page)
                 print('[INFO] Memory Usage :', psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
-
 
             with open(pdf_filename, 'rb') as file:
                 bot.edit_message_text(chat_id=chat_id,
