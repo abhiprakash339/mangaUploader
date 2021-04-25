@@ -48,8 +48,17 @@ UpDateId = None
 chromeOptions = webdriver.ChromeOptions()
 chromeOptions.set_headless()
 
+def progress(per):
+    prog = '[ '
+    completed = int(per) // 10
+    for i in range(completed):
+        prog += chr(9724)
+    for i in range(10 - completed):
+        prog += chr(9723)
+    prog += ' ]'
+    return str(prog)
 
-# @cache
+
 class MangaCrowler():
     def __init__(self, name, start, end, chat_id):
         # fireFoxOptions = webdriver.FirefoxOptions()
@@ -92,7 +101,7 @@ class MangaCrowler():
         temp3 = f"{bin_path}/temp3.pdf"
 
         while temp <= end:
-            msg = bot.sendMessage(chat_id=chat_id, text=f"{name}\n\nInitializing.")
+            msg = bot.sendMessage(chat_id=chat_id, text=f"{self.pdf_name}\n\nInitializing...")
             gc.collect()
             ch = round(temp, 1)
             if ch.is_integer():
@@ -101,7 +110,7 @@ class MangaCrowler():
             else:
                 chapter = str(ch)
                 stop = False
-            bot.edit_message_text(chat_id=chat_id, text=f"{name}\n\nInitializing..", message_id=msg.message_id)
+            bot.edit_message_text(chat_id=chat_id, text=f"{self.pdf_name}\n\nChecking Chapter: {chapter.zfill(3)}", message_id=msg.message_id)
             temp = round(temp, 10) + round(0.1, 10)
             pdf_filename = str(bin_path + self.pdf_name + " Chapter " + str(chapter).zfill(3) + ".pdf")
             state, url, total_page = self.get_original_url(name, chapter, 1)
@@ -154,8 +163,9 @@ class MangaCrowler():
                 else:
                     print('[INFO] UNKNOWN ERROR')
                     break
+                percentage = int(float(page / total_page) * 100)
                 bot.edit_message_text(chat_id=chat_id,
-                                      text=f"{name}\n\nDownloading :\n\nChapter :{str(chapter).zfill(3)}\nPAGE : {page}\nPercentage :{int(float(page / total_page) * 100)}%",
+                                      text=f"{self.pdf_name}\n\nDownloading :\n\nChapter :{str(chapter).zfill(3)}\nPAGE : {page}\n{progress(percentage)} :{percentage}%",
                                       message_id=msg.message_id)
                 page += 1
                 merger.close()
@@ -166,7 +176,7 @@ class MangaCrowler():
 
             with open(pdf_filename, 'rb') as file:
                 bot.edit_message_text(chat_id=chat_id,
-                                      text=f"{name}\n=====Uploading=====\n\nChapter :{str(chapter).zfill(3)}",
+                                      text=f"{self.pdf_name}\n=====Uploading=====\n\nChapter :{str(chapter).zfill(3)}",
                                       message_id=msg.message_id)
                 if len(self.pdf_name + " Chapter " + str(chapter).zfill(3) + ".pdf") > 45:
                     print("[ BOT ] ",
