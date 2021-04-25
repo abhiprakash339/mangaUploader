@@ -48,9 +48,13 @@ UpDateId = None
 chromeOptions = webdriver.ChromeOptions()
 chromeOptions.set_headless()
 
+
 def progress(per):
     prog = '[ '
-    completed = int(per) // 10
+    try:
+        completed = int(per) // 10
+    except Exception:
+        completed = 0
     for i in range(completed):
         prog += chr(9724)
     for i in range(10 - completed):
@@ -110,7 +114,8 @@ class MangaCrowler():
             else:
                 chapter = str(ch)
                 stop = False
-            bot.edit_message_text(chat_id=chat_id, text=f"{self.pdf_name}\n\nChecking Chapter: {chapter.zfill(3)}", message_id=msg.message_id)
+            bot.edit_message_text(chat_id=chat_id, text=f"{self.pdf_name}\n\nChecking Chapter: {chapter.zfill(3)}",
+                                  message_id=msg.message_id)
             temp = round(temp, 10) + round(0.1, 10)
             pdf_filename = str(bin_path + self.pdf_name + " Chapter " + str(chapter).zfill(3) + ".pdf")
             state, url, total_page = self.get_original_url(name, chapter, 1)
@@ -124,14 +129,13 @@ class MangaCrowler():
             elif state == 'ERROR' and not stop:
                 bot.delete_message(chat_id=chat_id, message_id=msg.message_id)
                 continue
-            bot.edit_message_text(chat_id=chat_id, text=f"{name}\n\nInitializing...", message_id=msg.message_id)
 
             print("[ INFO ] Original URL :", url)
             main_url = url[:-7]
 
             page = 1
             bot.edit_message_text(chat_id=chat_id,
-                                  text=f"{name}\n\nDownloading :\n\nChapter :{str(chapter).zfill(3)}\nPAGE :{page}\nPercentage :0%",
+                                  text=f"{self.pdf_name}\n\nDownloading :\n\nChapter :{str(chapter).zfill(3)}\nPAGE :{page}\n{progress(0)} :0%",
                                   message_id=msg.message_id)
             while True:
                 gc.collect()
