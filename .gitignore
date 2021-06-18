@@ -1,2 +1,8 @@
+*
 venv/
 .idea/
+!bot.py
+!Procfile
+!requirements.txt
+!.gitignore
+!README.md
